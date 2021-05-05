@@ -33,6 +33,7 @@ class client {
 	static RC register(String user) 
 	{
 		// Write your code here
+        System.out.println("REGISTER in progress");
 		return RC.ERROR;
 	}
 	

@@ -19,39 +19,47 @@ pthread_attr_t attr;
 pthread_mutex_t mutex1;
 pthread_cond_t signal1;
 
+int register_user();
+int unregister_user();
+int connect_user();
+int disconnect_user();
+int send_req_user();
+int send_mess_ack_user();
+int send_mess_to_user();
+
 //FUNCTIONS
 //REGISTER
-int register_user{
+int register_user(){
     return 0;
 }
 
 //UNREGISTER
-int unregister_user{
+int unregister_user(){
     return 0;
 }
 
 //CONNECT
-int connect_user{
+int connect_user(){
     return 0;
 }
 
 //DISCONNECT
-int disconnect_user{
+int disconnect_user(){
     return 0;
 }
 
 //SEND_REQ
-int send_req_user{
+int send_req_user(){
     return 0;
 }
 
 //SEND_MESS_ACK
-int send_mess_ack_user{
+int send_mess_ack_user(){
     return 0;
 }
 
 //SEND_MESS
-int send_mess_to_user{
+int send_mess_to_user(){
     return 0;
 }
 
@@ -83,7 +91,7 @@ void manage_request (int *s) {
             break;
         }
         else if(strncmp(buffer,"DISCONNECT",10)==0){
-            res=disconnect_user()
+            res=disconnect_user();
             break;
         }
         else if(strncmp(buffer,"SEND",4)==0){

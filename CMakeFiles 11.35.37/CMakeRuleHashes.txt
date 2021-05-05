@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+3858142be2f99a6289fe7ed665a7f750 CMakeFiles/client
+dce3fb1a0f893eca2d8a81bafae14215 CMakeFiles/client.dir/java_class_filelist
+e9df25ff57f5c6db4f2b1edd97a961e5 CMakeFiles/client.dir/java_compiled_client
+794d38d9cf8b01c4f305b28b6bb721fe client.jar
