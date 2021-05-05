@@ -1,4 +1,0 @@
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/ds_assignment/CMakeFiles/rebuild_cache.dir
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/ds_assignment/CMakeFiles/edit_cache.dir
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/ds_assignment/CMakeFiles/client.dir
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/ds_assignment/CMakeFiles/server.dir
