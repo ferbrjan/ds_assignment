@@ -1,5 +1,9 @@
 import java.io.*;
 import gnu.getopt.Getopt;
+import java.net.* ;
+import java.util.* ;
+import java.lang.* ;
+
 
 
 class client {
@@ -33,8 +37,29 @@ class client {
 	static RC register(String user) 
 	{
 		// Write your code here
-        System.out.println("REGISTER in progress");
-		return RC.ERROR;
+        try{
+            Socket sc = new Socket(_server,_port);
+            
+            DataOutputStream out = new DataOutputStream(sc.getOutputStream());
+            DataInputStream in = new DataInputStream(sc.getInputStream());
+            //InputStreamReader  is = new InputStreamReader(System.in);
+            //BufferedReader br = new BufferedReader(is);
+            
+            System.out.println("REGISTER in progress");
+            String message = new String("REGISTER");
+            out.writeBytes(message);
+            out.write('\0'); // insert the ASCII 0 at the end
+            message = user;
+            out.writeBytes(message);
+            out.write('\0');
+            return RC.ERROR;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception " + e.toString() );
+            e.printStackTrace() ;
+            return RC.ERROR;
+        }
 	}
 	
 	/**
@@ -47,7 +72,29 @@ class client {
 	static RC unregister(String user) 
 	{
 		// Write your code here
-		return RC.ERROR;
+        try{
+            Socket sc = new Socket(_server,_port);
+            
+            DataOutputStream out = new DataOutputStream(sc.getOutputStream());
+            DataInputStream in = new DataInputStream(sc.getInputStream());
+            //InputStreamReader  is = new InputStreamReader(System.in);
+            //BufferedReader br = new BufferedReader(is);
+            
+            System.out.println("UNREGISTER in progress");
+            String message = new String("UNREGISTER");
+            out.writeBytes(message);
+            out.write('\0'); // insert the ASCII 0 at the end
+            message = user;
+            out.writeBytes(message);
+            out.write('\0');
+            return RC.ERROR;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception " + e.toString() );
+            e.printStackTrace() ;
+            return RC.ERROR;
+        }
 	}
 	
     /**
@@ -236,6 +283,9 @@ class client {
 		}
 		
 		// Write code here
+        
+       
+
 		
 		shell();
 		System.out.println("+++ FINISHED +++");

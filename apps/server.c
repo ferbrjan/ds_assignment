@@ -19,8 +19,21 @@ pthread_attr_t attr;
 pthread_mutex_t mutex1;
 pthread_cond_t signal1;
 
-int register_user();
-int unregister_user();
+struct registered{
+    char id[254];
+    int port;
+    struct registered* pNext;
+};
+
+struct registered* pHead = NULL;
+
+//FUNCTION DECLARATIONS
+int addReg(char* id, int* port);
+int searchReg(char* id);
+int deleteReg(char* id);
+int numReg(void);
+int register_user(char* user);
+int unregister_user(char* user);
 int connect_user();
 int disconnect_user();
 int send_req_user();
@@ -29,13 +42,35 @@ int send_mess_to_user();
 
 //FUNCTIONS
 //REGISTER
-int register_user(){
-    return 0;
+int register_user(char* user){
+    printf("In register_user()!\n");
+    int res = searchReg(user);
+    if (res==1){
+        printf("user already exists\n");
+        return  1;
+    }
+    else{
+        addReg(user, 4200);
+        printf("user registered\n");
+        printf("number of  registered users is %i\n",numReg());
+        return 0;
+    }
 }
 
 //UNREGISTER
-int unregister_user(){
-    return 0;
+int unregister_user(char* user){
+    printf("In unregister_user()!\n");
+    int res = searchReg(user);
+    if (res==0){
+        printf("user does not exists\n");
+        return  1;
+    }
+    else{
+        deleteReg(user);
+        printf("user unregistered\n");
+        printf("number of  registered users is %i\n",numReg());
+        return 0;
+    }
 }
 
 //CONNECT
@@ -79,11 +114,13 @@ void manage_request (int *s) {
     while(1){
         int msg = readLine(sc, buffer, MAX_LINE);
         if(strncmp(buffer,"REGISTER",8)==0){
-            res = register_user();
+            msg = readLine(sc, buffer, MAX_LINE);
+            res = register_user(buffer);
             break;
         }
         else if(strncmp(buffer,"UNREGISTER",10)==0){
-            res = unregister_user();
+            msg = readLine(sc, buffer, MAX_LINE);
+            res = unregister_user(buffer);
             break;
         }
         else if(strncmp(buffer,"CONNECT",7)==0){
@@ -176,4 +213,59 @@ int main(int argc, char *argv[])
         }
         close (sd);
         return(0);
+}
+int addReg(char* id, int* port)
+{
+    struct registered* new = (struct registered*)malloc(sizeof(struct registered));
+    strcpy(new->id,id);
+    new->port = port;
+    new->pNext = pHead;
+    pHead = new;
+    return 0;
+}
+
+int searchReg(char* id)
+{
+    struct registered* tmp = pHead;
+    while(tmp != NULL)
+    {
+        if(strcmp(id, tmp->id) == 0)
+            return 1;
+        tmp = tmp->pNext;
+    }
+    return 0;//element does not exsist
+}
+
+
+int deleteReg(char* id)
+{
+    struct registered* prev = NULL;
+    struct registered* tmp = pHead;
+    while(tmp)
+    {
+        if(!strcmp(id, tmp->id))
+        {
+            if(prev!=NULL)
+                prev->pNext = tmp->pNext;
+            else
+                pHead = tmp->pNext;
+            free(tmp);
+            return 0;
+        }
+        prev = tmp;
+        tmp = tmp->pNext;
+    }
+    return -1;//element does not exsist
+}
+
+int numReg()
+{
+    int num = 0;
+    struct registered* tmp = pHead;
+    while(tmp)
+    {
+        num = num + 1;
+        tmp = tmp->pNext;
+    }
+    return num;
 }
