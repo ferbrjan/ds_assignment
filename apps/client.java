@@ -107,7 +107,33 @@ class client {
 	static RC connect(String user) 
 	{
 		// Write your code here
-		return RC.ERROR;
+        try{
+            Socket sc = new Socket(_server,_port);
+            
+            DataOutputStream out = new DataOutputStream(sc.getOutputStream());
+            DataInputStream in = new DataInputStream(sc.getInputStream());
+            //InputStreamReader  is = new InputStreamReader(System.in);
+            //BufferedReader br = new BufferedReader(is);
+            
+            System.out.println("CONNECT in progress");
+            String message = new String("CONNECT");
+            out.writeBytes(message);
+            out.write('\0'); // insert the ASCII 0 at the end
+            message = user;
+            out.writeBytes(message);
+            out.write('\0');
+            message = "42000";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            out.writeBytes(message);
+            out.write('\0');
+            //AFTER CONNECTING THE THREAD NEEDS TO START RUNNING TO ACCEPT MESSAGES
+            return RC.ERROR;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception " + e.toString() );
+            e.printStackTrace() ;
+            return RC.ERROR;
+        }
 	}
 	
 	 /**
@@ -120,7 +146,29 @@ class client {
 	static RC disconnect(String user) 
 	{
 		// Write your code here
-		return RC.ERROR;
+        try{
+            Socket sc = new Socket(_server,_port);
+            
+            DataOutputStream out = new DataOutputStream(sc.getOutputStream());
+            DataInputStream in = new DataInputStream(sc.getInputStream());
+            //InputStreamReader  is = new InputStreamReader(System.in);
+            //BufferedReader br = new BufferedReader(is);
+            
+            System.out.println("DISCONNECT in progress");
+            String message = new String("DISCONNECT");
+            out.writeBytes(message);
+            out.write('\0'); // insert the ASCII 0 at the end
+            message = user;
+            out.writeBytes(message);
+            out.write('\0');
+            return RC.ERROR;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception " + e.toString() );
+            e.printStackTrace() ;
+            return RC.ERROR;
+        }
 	}
 
 	 /**

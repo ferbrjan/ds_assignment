@@ -25,17 +25,28 @@ struct registered{
     struct registered* pNext;
 };
 
-struct registered* pHead = NULL;
+struct connected{
+    char id[254];
+    int port;
+    struct registered* pNext;
+};
+
+struct registered* pHeadReg = NULL;
+struct connected* pHeadCon = NULL;
 
 //FUNCTION DECLARATIONS
 int addReg(char* id, int* port);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
+int addCon(char* id, int* port);
+int searchCon(char* id);
+int deleteCon(char* id);
+int numCon(void);
 int register_user(char* user);
 int unregister_user(char* user);
-int connect_user();
-int disconnect_user();
+int connect_user(char* user, int port);
+int disconnect_user(char* user);
 int send_req_user();
 int send_mess_ack_user();
 int send_mess_to_user();
@@ -74,12 +85,49 @@ int unregister_user(char* user){
 }
 
 //CONNECT
-int connect_user(){
-    return 0;
+int connect_user(char* user, int port){
+    printf("In connect_user()!\n");
+    int res = searchReg(user);
+    if (res==0){
+        printf("user not registered\n");
+        return  1;
+    }
+    else{
+        int res = searchCon(user);
+        if (res==1){
+            printf("user already connected\n");
+            return  2;
+        }
+        else{
+            addCon(user,port);
+            printf("user connected\n");
+            printf("number of  connected users is %i\n",numCon());
+            return 0;
+        }
+    }
 }
 
 //DISCONNECT
-int disconnect_user(){
+int disconnect_user(char* user){
+    printf("In disconnect_user()!\n");
+    int res = searchReg(user);
+    if (res==0){
+        printf("user not registered\n");
+        return  1;
+    }
+    else{
+        int res = searchCon(user);
+        if (res==1){
+            deleteCon(user);
+            printf("user disconnecting\n");
+            printf("number of  connected users is %i\n",numCon());
+            return  0;
+        }
+        else{
+            printf("user not connected\n");
+            return 2;
+        }
+    }
     return 0;
 }
 
@@ -124,11 +172,16 @@ void manage_request (int *s) {
             break;
         }
         else if(strncmp(buffer,"CONNECT",7)==0){
-            res=connect_user();
+            msg = readLine(sc, buffer, MAX_LINE);
+            char buffer2[MAX_LINE];
+            msg = readLine(sc, buffer2, MAX_LINE);
+            int port = atoi(buffer2);
+            res=connect_user(buffer,port);
             break;
         }
         else if(strncmp(buffer,"DISCONNECT",10)==0){
-            res=disconnect_user();
+            msg = readLine(sc, buffer, MAX_LINE);
+            res=disconnect_user(buffer);
             break;
         }
         else if(strncmp(buffer,"SEND",4)==0){
@@ -219,14 +272,14 @@ int addReg(char* id, int* port)
     struct registered* new = (struct registered*)malloc(sizeof(struct registered));
     strcpy(new->id,id);
     new->port = port;
-    new->pNext = pHead;
-    pHead = new;
+    new->pNext = pHeadReg;
+    pHeadReg = new;
     return 0;
 }
 
 int searchReg(char* id)
 {
-    struct registered* tmp = pHead;
+    struct registered* tmp = pHeadReg;
     while(tmp != NULL)
     {
         if(strcmp(id, tmp->id) == 0)
@@ -240,7 +293,7 @@ int searchReg(char* id)
 int deleteReg(char* id)
 {
     struct registered* prev = NULL;
-    struct registered* tmp = pHead;
+    struct registered* tmp = pHeadReg;
     while(tmp)
     {
         if(!strcmp(id, tmp->id))
@@ -248,7 +301,7 @@ int deleteReg(char* id)
             if(prev!=NULL)
                 prev->pNext = tmp->pNext;
             else
-                pHead = tmp->pNext;
+                pHeadReg = tmp->pNext;
             free(tmp);
             return 0;
         }
@@ -261,7 +314,63 @@ int deleteReg(char* id)
 int numReg()
 {
     int num = 0;
-    struct registered* tmp = pHead;
+    struct registered* tmp = pHeadReg;
+    while(tmp)
+    {
+        num = num + 1;
+        tmp = tmp->pNext;
+    }
+    return num;
+}
+
+int addCon(char* id, int* port)
+{
+    struct connected* new = (struct connected*)malloc(sizeof(struct connected));
+    strcpy(new->id,id);
+    new->port = port;
+    new->pNext = pHeadCon;
+    pHeadCon = new;
+    return 0;
+}
+
+int searchCon(char* id)
+{
+    struct connected* tmp = pHeadCon;
+    while(tmp != NULL)
+    {
+        if(strcmp(id, tmp->id) == 0)
+            return 1;
+        tmp = tmp->pNext;
+    }
+    return 0;//element does not exsist
+}
+
+
+int deleteCon(char* id)
+{
+    struct connected* prev = NULL;
+    struct connected* tmp = pHeadCon;
+    while(tmp)
+    {
+        if(!strcmp(id, tmp->id))
+        {
+            if(prev!=NULL)
+                prev->pNext = tmp->pNext;
+            else
+                pHeadCon = tmp->pNext;
+            free(tmp);
+            return 0;
+        }
+        prev = tmp;
+        tmp = tmp->pNext;
+    }
+    return -1;//element does not exsist
+}
+
+int numCon()
+{
+    int num = 0;
+    struct connected* tmp = pHeadCon;
     while(tmp)
     {
         num = num + 1;
