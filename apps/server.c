@@ -43,92 +43,150 @@ int addCon(char* id, int* port);
 int searchCon(char* id);
 int deleteCon(char* id);
 int numCon(void);
-int register_user(char* user);
-int unregister_user(char* user);
-int connect_user(char* user, int port);
-int disconnect_user(char* user);
+int register_user(char* user, int sc);
+int unregister_user(char* user, int sc);
+int connect_user(char* user, int port, int sc);
+int disconnect_user(char* user, int sc);
 int send_req_user();
 int send_mess_ack_user();
 int send_mess_to_user();
 
 //FUNCTIONS
 //REGISTER
-int register_user(char* user){
+int register_user(char* user, int sc){
+    char buffer[MAX_LINE];
+    int msg;
     printf("In register_user()!\n");
     int res = searchReg(user);
     if (res==1){
         printf("user already exists\n");
+        strcpy(buffer,"USERNAME IN USE");
+        msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
-    else{
+    if (res==0){
         addReg(user, 4200);
         printf("user registered\n");
         printf("number of  registered users is %i\n",numReg());
+        strcpy(buffer,"REGISTER OK");
+        msg=sendMessage(sc, buffer, strlen(buffer));
         return 0;
+    }
+    else{
+        strcpy(buffer,"REGISTER FAIL");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        return 2;
     }
 }
 
 //UNREGISTER
-int unregister_user(char* user){
+int unregister_user(char* user, int sc){
+    char buffer[MAX_LINE];
+    int msg;
     printf("In unregister_user()!\n");
     int res = searchReg(user);
     if (res==0){
         printf("user does not exists\n");
-        return  1;
+        strcpy(buffer,"USER DOES NOT EXIST");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        return 1;
+    }
+    if (res==1){
+        res = searchCon(user);
+        if (res==1){
+            printf("user needs to disconnect first\n");
+            strcpy(buffer,"UNREGISTER FAIL");
+            msg=sendMessage(sc, buffer, strlen(buffer));
+            return 2;
+        }
+        else{
+            deleteReg(user);
+            printf("user unregistered\n");
+            printf("number of  registered users is %i\n",numReg());
+            strcpy(buffer,"UNREGISTER OK");
+            msg=sendMessage(sc, buffer, strlen(buffer));
+            return 0;
+        }
     }
     else{
-        deleteReg(user);
-        printf("user unregistered\n");
-        printf("number of  registered users is %i\n",numReg());
-        return 0;
+        strcpy(buffer,"UNREGISTER FAIL");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        return 2;
     }
 }
 
 //CONNECT
-int connect_user(char* user, int port){
+int connect_user(char* user, int port, int sc){
+    char buffer[MAX_LINE];
+    int msg;
     printf("In connect_user()!\n");
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
+        strcpy(buffer,"CONNECT FAIL, USER DOES NOT  EXIST");
+        msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
     else{
         int res = searchCon(user);
         if (res==1){
             printf("user already connected\n");
+            strcpy(buffer,"USER ALREADY CONNECTED");
+            msg=sendMessage(sc, buffer, strlen(buffer));
             return  2;
         }
-        else{
+        if (res==0){
             addCon(user,port);
             printf("user connected\n");
             printf("number of  connected users is %i\n",numCon());
+            strcpy(buffer,"CONNECT OK");
+            msg=sendMessage(sc, buffer, strlen(buffer));
             return 0;
+        }
+        else{
+            strcpy(buffer,"CONNECT FAIL");
+            msg=sendMessage(sc, buffer, strlen(buffer));
+            return 2;
         }
     }
 }
 
 //DISCONNECT
-int disconnect_user(char* user){
+int disconnect_user(char* user, int sc){
+    char buffer[MAX_LINE];
+    int msg;
     printf("In disconnect_user()!\n");
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
+        strcpy(buffer,"DISCONNECT FAIL/ USER DOES NOT EXIST");
+        msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
-    else{
+    if (res==1){
         int res = searchCon(user);
         if (res==1){
             deleteCon(user);
             printf("user disconnecting\n");
             printf("number of  connected users is %i\n",numCon());
+            printf("user not registered\n");
+            strcpy(buffer,"DISCONNECT OK");
+            msg=sendMessage(sc, buffer, strlen(buffer));
             return  0;
         }
         else{
             printf("user not connected\n");
+            printf("user not registered\n");
+            strcpy(buffer,"DISCONNECT FAIL/ USER NOT CONNECTED");
+            msg=sendMessage(sc, buffer, strlen(buffer));
             return 2;
         }
     }
-    return 0;
+    else{
+        strcpy(buffer,"DISCONNECT FAIL");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        return 3;
+    }
 }
 
 //SEND_REQ
@@ -163,12 +221,12 @@ void manage_request (int *s) {
         int msg = readLine(sc, buffer, MAX_LINE);
         if(strncmp(buffer,"REGISTER",8)==0){
             msg = readLine(sc, buffer, MAX_LINE);
-            res = register_user(buffer);
+            res = register_user(buffer,sc);
             break;
         }
         else if(strncmp(buffer,"UNREGISTER",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
-            res = unregister_user(buffer);
+            res = unregister_user(buffer,sc);
             break;
         }
         else if(strncmp(buffer,"CONNECT",7)==0){
@@ -176,12 +234,12 @@ void manage_request (int *s) {
             char buffer2[MAX_LINE];
             msg = readLine(sc, buffer2, MAX_LINE);
             int port = atoi(buffer2);
-            res=connect_user(buffer,port);
+            res=connect_user(buffer,port,sc);
             break;
         }
         else if(strncmp(buffer,"DISCONNECT",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
-            res=disconnect_user(buffer);
+            res=disconnect_user(buffer,sc);
             break;
         }
         else if(strncmp(buffer,"SEND",4)==0){

@@ -42,17 +42,22 @@ class client {
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
-            //InputStreamReader  is = new InputStreamReader(System.in);
-            //BufferedReader br = new BufferedReader(is);
             
-            System.out.println("REGISTER in progress");
+            //System.out.println("REGISTER in progress");
             String message = new String("REGISTER");
+            byte[] aux = null;
+            aux = new byte[256];
+            
             out.writeBytes(message);
             out.write('\0'); // insert the ASCII 0 at the end
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            return RC.ERROR;
+            
+            in.read(aux);
+            String s = new String(aux);
+            System.out.println(s);
+            return RC.OK;
         }
         catch (Exception e)
         {
@@ -77,17 +82,23 @@ class client {
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
-            //InputStreamReader  is = new InputStreamReader(System.in);
-            //BufferedReader br = new BufferedReader(is);
+
             
-            System.out.println("UNREGISTER in progress");
+            //System.out.println("UNREGISTER in progress");
             String message = new String("UNREGISTER");
+            byte[] aux = null;
+            aux = new byte[256];
+            
             out.writeBytes(message);
             out.write('\0'); // insert the ASCII 0 at the end
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            return RC.ERROR;
+            
+            in.read(aux);
+            String s = new String(aux);
+            System.out.println(s);
+            return RC.OK;
         }
         catch (Exception e)
         {
@@ -112,11 +123,12 @@ class client {
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
-            //InputStreamReader  is = new InputStreamReader(System.in);
-            //BufferedReader br = new BufferedReader(is);
             
-            System.out.println("CONNECT in progress");
+            //System.out.println("CONNECT in progress");
             String message = new String("CONNECT");
+            byte[] aux = null;
+            aux = new byte[256];
+            
             out.writeBytes(message);
             out.write('\0'); // insert the ASCII 0 at the end
             message = user;
@@ -125,8 +137,12 @@ class client {
             message = "42000";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
+            
+            in.read(aux);
+            String s = new String(aux);
+            System.out.println(s);
             //AFTER CONNECTING THE THREAD NEEDS TO START RUNNING TO ACCEPT MESSAGES
-            return RC.ERROR;
+            return RC.OK;
         }
         catch (Exception e)
         {
@@ -151,17 +167,24 @@ class client {
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
-            //InputStreamReader  is = new InputStreamReader(System.in);
-            //BufferedReader br = new BufferedReader(is);
             
-            System.out.println("DISCONNECT in progress");
+            
+            //System.out.println("DISCONNECT in progress");
             String message = new String("DISCONNECT");
+            byte[] aux = null;
+            aux = new byte[256];
+            
             out.writeBytes(message);
             out.write('\0'); // insert the ASCII 0 at the end
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            return RC.ERROR;
+            
+            in.read(aux);
+            String s = new String(aux);
+            System.out.println(s);
+            
+            return RC.OK;
         }
         catch (Exception e)
         {
