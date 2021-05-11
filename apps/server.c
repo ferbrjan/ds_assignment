@@ -123,7 +123,7 @@ int connect_user(char* user, int port, int sc){
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
-        strcpy(buffer,"CONNECT FAIL, USER DOES NOT  EXIST");
+        strcpy(buffer,"CONNECT FAIL, USER DOES NOT EXIST");
         msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
@@ -141,6 +141,49 @@ int connect_user(char* user, int port, int sc){
             printf("number of  connected users is %i\n",numCon());
             strcpy(buffer,"CONNECT OK");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            close(sc);
+            /*
+            struct sockaddr_in server_addr,client_addr;
+            int err;
+            int connection;
+            //Create and set up socket
+            sd =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (sd < 0) {
+                perror("Error in socket");
+                exit(1);
+            }
+            val = 1;
+            err = setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &val,
+                             sizeof(int));
+            if (err < 0) {
+                perror("Error in option");
+                exit(1);
+            }
+            bzero((char *)&server_addr, sizeof(server_addr));
+            server_addr.sin_addr.s_addr = INADDR_ANY;
+            server_addr.sin_family = AF_INET;
+            server_addr.sin_port = htons(4200);
+            connection = bind(sd,&server_addr,sizeof(server_addr));
+            if (connection < 0){
+                perror("Error in connecting");
+                exit(1);
+            }
+            connection = listen(sd,5);
+            if (connection < 0) {
+                perror("Error in connecting");
+                exit(1);
+            }
+            
+            while(1){
+                
+            }
+            */
+            //create another connection on different port!
+            
+            
+            msg = readLine(0, buffer, MAX_LINE);
+            printf("message inputed\n");
+            msg=sendMessage(sc, buffer, msg+1);
             return 0;
         }
         else{
@@ -292,8 +335,8 @@ int main(int argc, char *argv[])
         server_addr.sin_port = htons(4200);
         connection = bind(sd,&server_addr,sizeof(server_addr));
         if (connection < 0){
-        perror("Error in connecting");
-        exit(1);
+            perror("Error in connecting");
+            exit(1);
         }
         connection = listen(sd,5);
         if (connection < 0) {

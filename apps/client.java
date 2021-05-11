@@ -57,6 +57,7 @@ class client {
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
+            //Socket.close();
             return RC.OK;
         }
         catch (Exception e)
@@ -98,6 +99,7 @@ class client {
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
+            //Socket.close();
             return RC.OK;
         }
         catch (Exception e)
@@ -119,7 +121,7 @@ class client {
 	{
 		// Write your code here
         try{
-            Socket sc = new Socket(_server,_port);
+            Socket sc = new Socket(_server,_port); //New port number!!!!!
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
@@ -134,14 +136,41 @@ class client {
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            message = "42000";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            message = "42001";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
             
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
+            /*
             //AFTER CONNECTING THE THREAD NEEDS TO START RUNNING TO ACCEPT MESSAGES
+            Thread readMessage = new Thread(new Runnable()
+                                            {
+                @Override
+                public void run() {
+                    
+                    while (true) {
+                        try {
+                            // read the message sent to this client
+                            Socket sc_rec = new Socket(_server,42001); //I am trying to connect to 42001
+                            DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                            byte[] mess = null;
+                            mess = new byte[256];
+                            //System.out.println("EVA JE FRAJER");
+                            stream.read(mess);
+                            String msg= new String(mess);
+                            System.out.println(msg);
+                            System.out.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            readMessage.start();
+            System.out.println("read message started");
+            */
             return RC.OK;
         }
         catch (Exception e)
@@ -163,7 +192,7 @@ class client {
 	{
 		// Write your code here
         try{
-            Socket sc = new Socket(_server,_port);
+            Socket sc = new Socket(_server,_port); //New port number!!!!!
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
@@ -247,6 +276,7 @@ class client {
                     else if (line[0].equals("CONNECT")) {
 						if  (line.length == 2) {
 							connect(line[1]); // userName = line[1]
+                            
 						} else {
 							System.out.println("Syntax error. Usage: CONNECT <userName>");
                     	}
