@@ -23,7 +23,7 @@ class client {
 	
 	private static String _server   = null;
 	private static int _port = -1;
-		
+    private static Thread _readMessage = null;
 	
 	/********************* METHODS ********************/
 	
@@ -57,8 +57,14 @@ class client {
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
-            //Socket.close();
-            return RC.OK;
+            sc.close();
+            
+            if ("REGISTER OK".equals(s.trim())){
+                return RC.OK; //CHANGE!
+            }
+            else{
+                return RC.ERROR;
+            }
         }
         catch (Exception e)
         {
@@ -99,8 +105,14 @@ class client {
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
-            //Socket.close();
-            return RC.OK;
+            sc.close();
+            
+            if ("UNREGISTER OK".equals(s.trim())){
+                return RC.OK; //CHANGE!
+            }
+            else{
+                return RC.ERROR;
+            }
         }
         catch (Exception e)
         {
@@ -136,41 +148,55 @@ class client {
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            message = "42001";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            message = "42005";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
             
             in.read(aux);
             String s = new String(aux);
-            System.out.println(s);
-            /*
+            System.out.println(s + "WTF");
+            sc.close();
+            
             //AFTER CONNECTING THE THREAD NEEDS TO START RUNNING TO ACCEPT MESSAGES
-            Thread readMessage = new Thread(new Runnable()
-                                            {
-                @Override
-                public void run() {
-                    
-                    while (true) {
-                        try {
-                            // read the message sent to this client
-                            Socket sc_rec = new Socket(_server,42001); //I am trying to connect to 42001
-                            DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                            byte[] mess = null;
-                            mess = new byte[256];
-                            //System.out.println("EVA JE FRAJER");
-                            stream.read(mess);
-                            String msg= new String(mess);
-                            System.out.println(msg);
-                            System.out.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
+            if ("CONNECT OK".equals(s.trim())){
+                Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
+                
+                _readMessage = new Thread(new Runnable()
+                                          {
+                    @Override
+                    public void run() {
+                        
+                        while (true) {
+                            try {
+                                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                                byte[] mess = null;
+                                mess = new byte[256];
+                                stream.read(mess);
+                                String msg= new String(mess);
+                                System.out.println(msg);
+                                System.out.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
-                }
-            });
-            readMessage.start();
-            System.out.println("read message started");
-            */
+                });
+                
+                
+                _readMessage.start();
+                System.out.println("read message started");
+            }
+            else if ("CONNECT FAIL".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+            
+            else if ("USER ALREADY CONNECTED".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+            else if ("CONNECT FAIL, USER DOES NOT EXIST".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+
             return RC.OK;
         }
         catch (Exception e)
@@ -188,7 +214,7 @@ class client {
 	 * @return USER_ERROR if the user does not exist
 	 * @return ERROR if another error occurred
 	 */
-	static RC disconnect(String user) 
+	static RC disconnect(String user) //THIS NEEDS TO TERMINATE THE THREAD SOMEHOW
 	{
 		// Write your code here
         try{
@@ -212,8 +238,24 @@ class client {
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
+            sc.close();
             
-            return RC.OK;
+            if ("DISCONNECT OK".equals(s.trim())){
+                _readMessage.stop();
+                return RC.ERROR; //CHANGE!
+            }
+            else if ("DISCONNECT FAIL".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+            else if ("DISCONNECT FAIL/ USER NOT CONNECTED".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+            else if ("DISCONNECT FAIL/ USER DOES NOT EXIST".equals(s.trim())){
+                return RC.ERROR; //CHANGE!
+            }
+            else{
+                 return RC.ERROR; //CHANGE!
+            }
         }
         catch (Exception e)
         {
@@ -246,7 +288,6 @@ class client {
 		String input;
 		String [] line;
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-
 		while (!exit) {
 			try {
 				System.out.print("c> ");
@@ -276,6 +317,7 @@ class client {
                     else if (line[0].equals("CONNECT")) {
 						if  (line.length == 2) {
 							connect(line[1]); // userName = line[1]
+                            
                             
 						} else {
 							System.out.println("Syntax error. Usage: CONNECT <userName>");
@@ -384,10 +426,6 @@ class client {
 		}
 		
 		// Write code here
-        
-       
-
-		
 		shell();
 		System.out.println("+++ FINISHED +++");
 	}

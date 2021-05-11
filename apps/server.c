@@ -141,49 +141,6 @@ int connect_user(char* user, int port, int sc){
             printf("number of  connected users is %i\n",numCon());
             strcpy(buffer,"CONNECT OK");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            close(sc);
-            /*
-            struct sockaddr_in server_addr,client_addr;
-            int err;
-            int connection;
-            //Create and set up socket
-            sd =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if (sd < 0) {
-                perror("Error in socket");
-                exit(1);
-            }
-            val = 1;
-            err = setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &val,
-                             sizeof(int));
-            if (err < 0) {
-                perror("Error in option");
-                exit(1);
-            }
-            bzero((char *)&server_addr, sizeof(server_addr));
-            server_addr.sin_addr.s_addr = INADDR_ANY;
-            server_addr.sin_family = AF_INET;
-            server_addr.sin_port = htons(4200);
-            connection = bind(sd,&server_addr,sizeof(server_addr));
-            if (connection < 0){
-                perror("Error in connecting");
-                exit(1);
-            }
-            connection = listen(sd,5);
-            if (connection < 0) {
-                perror("Error in connecting");
-                exit(1);
-            }
-            
-            while(1){
-                
-            }
-            */
-            //create another connection on different port!
-            
-            
-            msg = readLine(0, buffer, MAX_LINE);
-            printf("message inputed\n");
-            msg=sendMessage(sc, buffer, msg+1);
             return 0;
         }
         else{
@@ -249,7 +206,7 @@ int send_mess_to_user(){
 
 //Manage request
 void manage_request (int *s) {
-    int sc;
+    int sc,client_sc;
     int  res;
     kill=FALSE;
     pthread_mutex_lock(&mutex1);
@@ -260,16 +217,19 @@ void manage_request (int *s) {
     busy=FALSE;
     pthread_cond_signal(&signal1);
     pthread_mutex_unlock(&mutex1);
+    
     while(1){
         int msg = readLine(sc, buffer, MAX_LINE);
         if(strncmp(buffer,"REGISTER",8)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res = register_user(buffer,sc);
+            close(sc);
             break;
         }
         else if(strncmp(buffer,"UNREGISTER",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res = unregister_user(buffer,sc);
+            close(sc);
             break;
         }
         else if(strncmp(buffer,"CONNECT",7)==0){
@@ -278,27 +238,69 @@ void manage_request (int *s) {
             msg = readLine(sc, buffer2, MAX_LINE);
             int port = atoi(buffer2);
             res=connect_user(buffer,port,sc);
+            close(sc);
+            //Create another socket for communication
+            if (res==0){
+                socklen_t size;
+                struct sockaddr_in server_addr,client_addr;
+                int err;
+                int connection;
+                //Create and set up socket
+                int sd =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                if (sd < 0) {
+                    perror("Error in socket");
+                    exit(1);
+                }
+                server_addr.sin_port = htons(port);
+                connection = bind(sd,&server_addr,sizeof(server_addr));
+                if (connection < 0) {
+                    perror("Error in connecting");
+                    exit(1);
+                }
+                connection = listen(sd,5);
+                if (connection < 0) {
+                    perror("Error in connecting");
+                    exit(1);
+                }
+                client_sc = accept(sd,(struct sockaddr *)&client_addr,&size);
+                if (getsockname(client_sc, (struct sockaddr *)&client_addr, &size) == -1){
+                    perror("getsockname");
+                }
+                else{
+                    printf("port number %d\n", ntohs(client_addr.sin_port));
+                }
+            }
+            //FOR TESTING
+            while(1){
+                msg=readLine(0,buffer2,MAX_LINE);
+                msg=sendMessage(client_sc, buffer2, strlen(buffer2));
+            }
             break;
         }
         else if(strncmp(buffer,"DISCONNECT",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res=disconnect_user(buffer,sc);
+            if (res==0){
+                close(client_sc);
+            }
+            close(sc);
             break;
         }
         else if(strncmp(buffer,"SEND",4)==0){
             res=send_req_user();
             res=send_mess_to_user();
+            close(sc);
             break;
         }
         else if(strncmp(buffer,"SEND_MESS_ACK",13)==0){
             res=send_mess_ack_user();
+            close(sc);
             break;
         }
         else{
             break;
         }
     }
-    close(sc);
     pthread_exit(NULL);
 }
 
