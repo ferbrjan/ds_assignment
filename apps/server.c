@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
-#include "lines.h"
+#include "../include/lines.h"
 
 #define MAX_LINE 256
 #define TRUE 1

@@ -2,6 +2,9 @@ import java.io.*;
 import gnu.getopt.Getopt;
 import java.net.* ;
 import java.util.* ;
+
+import org.graalvm.compiler.lir.sparc.SPARCBreakpointOp;
+
 import java.lang.* ;
 
 
@@ -34,12 +37,35 @@ class client {
 	 * @return USER_ERROR if the user is already registered
 	 * @return ERROR if another error occurred
 	 */
+    
+    static class listen_th extends Thread{
+        private ServerSocket sc;
+        public listen_th(ServerSocket ser_socket){
+            this.sc = ser_socket;
+        }
+        public void run(){
+            System.out .println("no jestech tutaj");
+            try {
+                Socket sc_rec = this.sc.accept();
+                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                byte[] mess = null;
+                mess = new byte[256];
+                stream.read(mess);
+                String msg= new String(mess);
+                System.out.println(msg);
+                System.out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 	static RC register(String user) 
 	{
 		// Write your code here
         try{
             Socket sc = new Socket(_server,_port);
-            
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
             
@@ -132,6 +158,19 @@ class client {
 	static RC connect(String user) 
 	{
 		// Write your code here
+        // check if the user is not longer that 255
+        //
+        /*
+        Socket sc = new Socket(_server, _port);
+
+         //Create the socket to listen to
+
+         ServerSocket listenSc = new ServerSocket(0); //0 used so that the system looks for a free port
+
+         //Obtain the port in a string to send to the _server
+
+         String listen_port = Integer.toString(listenSc.getLocalPort());
+         */
         try{
             Socket sc = new Socket(_server,_port); //New port number!!!!!
             
@@ -148,7 +187,9 @@ class client {
             message = user;
             out.writeBytes(message);
             out.write('\0');
-            message = "42005";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            ServerSocket listenSc = new ServerSocket(0);
+            String listen_port = Integer.toString(listenSc.getLocalPort());
+            message = String.valueOf(listen_port);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
             
@@ -160,14 +201,14 @@ class client {
                 //HERE WE NEED TO START A THREAD THAT IS LISTENING ON PORT 42005
                 
                 // THIS CREATED THE CONNECTION Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
-                
-                _readMessage = new Thread(new Runnable()
+                /*
+                _readMessage = new (new Runnable()
                                           {
                     @Override
                     public void run() {
-                        
                         while (true) {
                             try {
+                                Socket sc_rec = new Socket(_server, 42005);
                                 DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
                                 byte[] mess = null;
                                 mess = new byte[256];
@@ -175,13 +216,16 @@ class client {
                                 String msg= new String(mess);
                                 System.out.println(msg);
                                 System.out.flush();
+                                sc_rec.close();
+                                
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
                     }
                 });
-                
+                */
+                _readMessage = new listen_th(listenSc);
                 _readMessage.start();
                 
             }
@@ -215,8 +259,7 @@ class client {
                 _readMessage.start();
                 System.out.println("read message started");
                 */
-            }
-            else if ("CONNECT FAIL".equals(s.trim())){
+            if ("CONNECT FAIL".equals(s.trim())){
                 return RC.ERROR; //CHANGE!
             }
             
