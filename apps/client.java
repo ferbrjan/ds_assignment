@@ -148,22 +148,47 @@ class client {
             message = user;
             out.writeBytes(message);
             out.write('\0');
+            message = "42005";  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            out.writeBytes(message);
+            out.write('\0');
             
             in.read(aux);
             String s = new String(aux);
             System.out.println(s);
-            
-            int port_number = aux[0];
-            
-            in.read(aux);
-            s = new String(aux);
-            System.out.println(s);
-            
             sc.close();
-            
-            //AFTER CONNECTING THE THREAD NEEDS TO START RUNNING TO ACCEPT MESSAGES
             if ("CONNECT OK".equals(s.trim())){
-                Socket sc_rec = new Socket(_server,port_number); //I am trying to connect to 42005
+                //HERE WE NEED TO START A THREAD THAT IS LISTENING ON PORT 42005
+                
+                // THIS CREATED THE CONNECTION Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
+                
+                _readMessage = new Thread(new Runnable()
+                                          {
+                    @Override
+                    public void run() {
+                        
+                        while (true) {
+                            try {
+                                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                                byte[] mess = null;
+                                mess = new byte[256];
+                                stream.read(mess);
+                                String msg= new String(mess);
+                                System.out.println(msg);
+                                System.out.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                
+                _readMessage.start();
+                
+            }
+            /*
+            
+            if ("CONNECT OK".equals(s.trim())){
+                Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
                 
                 _readMessage = new Thread(new Runnable()
                                           {
@@ -189,6 +214,7 @@ class client {
                 
                 _readMessage.start();
                 System.out.println("read message started");
+                */
             }
             else if ("CONNECT FAIL".equals(s.trim())){
                 return RC.ERROR; //CHANGE!
