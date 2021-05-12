@@ -18,6 +18,7 @@ pthread_t thread;
 pthread_attr_t attr;
 pthread_mutex_t mutex1;
 pthread_cond_t signal1;
+static int g_id=0;
 
 struct registered{
     char id[254];
@@ -27,6 +28,7 @@ struct registered{
 
 struct connected{
     char id[254];
+    int user_id;
     int port;
     struct registered* pNext;
 };
@@ -39,13 +41,13 @@ int addReg(char* id, int* port);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
-int addCon(char* id, int* port);
+int addCon(char* id);
 int searchCon(char* id);
 int deleteCon(char* id);
 int numCon(void);
 int register_user(char* user, int sc);
 int unregister_user(char* user, int sc);
-int connect_user(char* user, int port, int sc);
+int connect_user(char* user, int sc, int* user_port);
 int disconnect_user(char* user, int sc);
 int send_req_user();
 int send_mess_ack_user();
@@ -116,7 +118,7 @@ int unregister_user(char* user, int sc){
 }
 
 //CONNECT
-int connect_user(char* user, int port, int sc){
+int connect_user(char* user, int sc, int* user_port){
     char buffer[MAX_LINE];
     int msg;
     printf("In connect_user()!\n");
@@ -136,9 +138,12 @@ int connect_user(char* user, int port, int sc){
             return  2;
         }
         if (res==0){
-            addCon(user,port);
+            user_port=addCon(user);
             printf("user connected\n");
             printf("number of  connected users is %i\n",numCon());
+            char port_string[256];
+            sprintf(port_string,"%i",user_port);
+            msg=sendMessage(sc, port_string, strlen(port_string));
             strcpy(buffer,"CONNECT OK");
             msg=sendMessage(sc, buffer, strlen(buffer));
             return 0;
@@ -235,9 +240,10 @@ void manage_request (int *s) {
         else if(strncmp(buffer,"CONNECT",7)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             char buffer2[MAX_LINE];
-            msg = readLine(sc, buffer2, MAX_LINE);
-            int port = atoi(buffer2);
-            res=connect_user(buffer,port,sc);
+            
+
+            int port;
+            res=connect_user(buffer,sc,port);
             close(sc);
             //Create another socket for communication
             if (res==0){
@@ -426,14 +432,17 @@ int numReg()
     return num;
 }
 
-int addCon(char* id, int* port)
+int addCon(char* id)
 {
     struct connected* new = (struct connected*)malloc(sizeof(struct connected));
     strcpy(new->id,id);
-    new->port = port;
+    new->user_id = g_id++;
+    printf("id is %i \n",new->user_id);
+    new->port = 42000+new->user_id;
+    printf("new port is %i \n",new->port);
     new->pNext = pHeadCon;
     pHeadCon = new;
-    return 0;
+    return new->port;
 }
 
 int searchCon(char* id)
