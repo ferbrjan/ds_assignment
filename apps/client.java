@@ -1,9 +1,10 @@
 import java.io.*;
 import gnu.getopt.Getopt;
 import java.net.* ;
+import java.security.MessageDigest;
 import java.util.* ;
 
-import org.graalvm.compiler.lir.sparc.SPARCBreakpointOp;
+//import org.graalvm.compiler.lir.sparc.SPARCBreakpointOp;
 
 import java.lang.* ;
 
@@ -37,25 +38,33 @@ class client {
 	 * @return USER_ERROR if the user is already registered
 	 * @return ERROR if another error occurred
 	 */
-    
-    static class listen_th extends Thread{
-        private ServerSocket sc;
-        public listen_th(ServerSocket ser_socket){
-            this.sc = ser_socket;
+    static class listen_th extends Thread
+    {
+        ServerSocket sc;
+        public listen_th(ServerSocket p_sc)
+        {
+            this.sc = p_sc;
         }
-        public void run(){
-            System.out .println("no jestech tutaj");
-            try {
-                Socket sc_rec = this.sc.accept();
-                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                byte[] mess = null;
-                mess = new byte[256];
-                stream.read(mess);
-                String msg= new String(mess);
-                System.out.println(msg);
-                System.out.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+        @Override
+        public void run()
+        {
+            System.out.println("im in the run");
+            while (true) {
+                try {
+                    Socket sc_rec = this.sc.accept();
+                    DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                    System.out.println("im in the loop");
+                    byte[] mess = null;
+                    mess = new byte[256];
+                    stream.read(mess);
+                    String msg= new String(mess);
+                    System.out.println(msg);
+                    System.out.flush();
+                    sc_rec.close();
+                    
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -189,7 +198,8 @@ class client {
             out.write('\0');
             ServerSocket listenSc = new ServerSocket(0);
             String listen_port = Integer.toString(listenSc.getLocalPort());
-            message = String.valueOf(listen_port);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            message = String.valueOf(listen_port);
+            System.out.println("THE PORT NUMBER ON THE CLIENT SIDE IS: " + message);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
             

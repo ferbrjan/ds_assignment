@@ -25,22 +25,12 @@ stdio.h
 -
 pthread.h
 -
+arpa/inet.h
+-
 ../include/lines.h
 /Users/stanislawczembor/Desktop/ds/ds_assignment/include/lines.h
 
 /Users/stanislawczembor/Desktop/ds/ds_assignment/include/lines.h
-unistd.h
--
-
-/Users/stanislawczembor/Desktop/ds/ds_assignment/src/lines.c
-unistd.h
--
-errno.h
--
-lines.h
-/Users/stanislawczembor/Desktop/ds/ds_assignment/src/lines.h
-
-include/lines.h
 unistd.h
 -
 

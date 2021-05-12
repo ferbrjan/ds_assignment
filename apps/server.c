@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include "../include/lines.h"
 
 #define MAX_LINE 256
@@ -239,6 +240,39 @@ void manage_request (int *s) {
             int port = atoi(buffer2);
             res=connect_user(buffer,port,sc);
             close(sc);
+            printf("Manage request:\nThe port number is:%d\n", port);
+            char* ip = "127.0.0.1";
+            printf("The id number is:%s\n", ip);
+            int sock = 0, valread;
+            struct sockaddr_in client_server_addr;
+            if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+            {
+                printf("\n Socket creation error \n");
+                //return -1;
+            }
+            client_server_addr.sin_family = AF_INET;
+            client_server_addr.sin_port = htons(port);
+            // Convert IPv4 and IPv6 addresses from text to binary form
+            if(inet_pton(AF_INET, ip, &client_server_addr.sin_addr)<=0) 
+            {
+                printf("\nInvalid address/ Address not supported \n");
+                //return -1;
+            }
+            if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
+            {
+                printf("\nConnection Failed \n");
+                //return -1;
+            }
+            char hello[256];
+            printf("type your message:");
+            scanf("%s",hello);
+            char buffer[1024] = {0};
+            send(sock , hello , strlen(hello) , 0 );
+            printf("Hello message sent\n");
+            valread = read( sock , buffer, 1024);
+            printf("%s\n",buffer );
+            //return 0;
+
             //Create another socket for communication
             /*
             if (res==0){
@@ -352,6 +386,9 @@ int main(int argc, char *argv[])
         while(1){
             printf("waiting  for connection\n");
             int sc = accept(sd,(struct sockaddr *)&client_addr,&size);
+            printf("what is in sc %d\n", sc);
+            char *ip = inet_ntoa(client_addr.sin_addr);
+            printf("let me see the ip address in main:%s\n", ip);
             pthread_create(&thread,&attr,manage_request,&sc); //HERE!!!!!
             pthread_mutex_lock(&mutex1);
             while(busy==TRUE){
