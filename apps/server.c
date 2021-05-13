@@ -207,7 +207,7 @@ int disconnect_user(char* user, int sc){
         //msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
-    if (res==1){
+    else if (res==1){
         int res = searchCon(user);
         if (res==1){
             deleteCon(user);
@@ -238,11 +238,15 @@ int disconnect_user(char* user, int sc){
 }
 
 //SEND_REQ
-int send_req_user(char* user, char* message,char* port, int sc){ //user = reciever , message = message to be sent, port = port of the connected user in  order to search for his username in combination with IP adress in  case there are two users on the same computer
+int send_req_user(char* user, char* message,char* port, int sc){ //user = reciever , message = message to be sent, port = port of the connected user in order to search for his username in combination with IP adress in  case there are two users on the same computer
     char buffer[MAX_LINE];
     int msg;
     char sender[254];
+    char user_ip[254];
+    char user_port[254];
     int port_number=atoi(port);
+    
+    printf("MESSAGE SENT IS: %s\n",message);
     
     struct sockaddr_in client_server_addr;
     socklen_t serv_len = sizeof(client_server_addr);
@@ -250,7 +254,7 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
     
     searchConIpPort((char*)&sender,inet_ntoa(client_server_addr.sin_addr),port_number);
     
-    printf("NAME OF THE SENDER IS: %s\n",sender);
+    printf("NAME OF THE SENDER IS:%s\n",sender);
     
     int res = searchReg(user);
     
@@ -261,6 +265,28 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
             printf("USER CONNECTED");
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //Connection to the socket
+            int sock = 0, valread;
+            if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+            {
+                printf("\n Socket creation error \n");
+                //return -1;
+            }
+            client_server_addr.sin_family = AF_INET;
+            client_server_addr.sin_port = htons(port_number); //port number of reciever
+            // Convert IPv4 and IPv6 addresses from text to binary form
+            if(inet_pton(AF_INET, inet_ntoa(client_server_addr.sin_addr), &client_server_addr.sin_addr)<=0) //IP of  reciever
+            {
+                printf("\nInvalid address/ Address not supported \n");
+                //return -1;
+            }
+            if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
+            {
+                printf("\nConnection Failed \n");
+                //return -1;
+            }
+            msg=sendMessage(sock, message, strlen(message));
+            close(sock);
             return 0;
         }
         else{
