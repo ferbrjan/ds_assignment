@@ -29,18 +29,18 @@ struct registered{
 struct connected{
     char id[254];
     int port;
-    struct registered* pNext;
+    struct connected* pNext;
 };
 
 struct registered* pHeadReg = NULL;
 struct connected* pHeadCon = NULL;
 
 //FUNCTION DECLARATIONS
-int addReg(char* id, int* port);
+int addReg(char* id, int port);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
-int addCon(char* id, int* port);
+int addCon(char* id,int port);
 int searchCon(char* id);
 int deleteCon(char* id);
 int numCon(void);
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
         server_addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.sin_family = AF_INET;
         server_addr.sin_port = htons(4200);
-        connection = bind(sd,&server_addr,sizeof(server_addr));
+        connection = bind(sd,(const struct sockaddr *) &server_addr,sizeof(server_addr));
         if (connection < 0){
             perror("Error in connecting");
             exit(1);
@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
             pthread_create(&thread,&attr,manage_request,&sc); //HERE!!!!!
             pthread_mutex_lock(&mutex1);
             while(busy==TRUE){
-                pthread_cond_wait(&mutex1,&signal1);
+                pthread_cond_wait(&signal1,&mutex1);
             }
             pthread_mutex_unlock(&mutex1);
             busy=TRUE;
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
         close (sd);
         return(0);
 }
-int addReg(char* id, int* port)
+int addReg(char* id, int port)
 {
     struct registered* new = (struct registered*)malloc(sizeof(struct registered));
     strcpy(new->id,id);
@@ -466,7 +466,7 @@ int numReg()
     return num;
 }
 
-int addCon(char* id, int* port)
+int addCon(char* id, int port)
 {
     struct connected* new = (struct connected*)malloc(sizeof(struct connected));
     strcpy(new->id,id);

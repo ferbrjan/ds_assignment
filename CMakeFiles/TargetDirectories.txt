@@ -1,4 +1,4 @@
-/Users/stanislawczembor/Desktop/ds/ds_assignment/CMakeFiles/rebuild_cache.dir
-/Users/stanislawczembor/Desktop/ds/ds_assignment/CMakeFiles/edit_cache.dir
-/Users/stanislawczembor/Desktop/ds/ds_assignment/CMakeFiles/client.dir
-/Users/stanislawczembor/Desktop/ds/ds_assignment/CMakeFiles/server.dir
+/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/CMakeFiles/rebuild_cache.dir
+/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/CMakeFiles/edit_cache.dir
+/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/CMakeFiles/client.dir
+/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/CMakeFiles/server.dir
