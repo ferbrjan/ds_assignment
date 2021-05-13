@@ -237,7 +237,9 @@ int disconnect_user(char* user, int sc){
 }
 
 //SEND_REQ
-int send_req_user(char* user, char* message,char* port, int sc){
+int send_req_user(char* user, char* message,char* port, int sc){ //user = reciever , message = message to be sent, port = port of the connected user in  order to search for his username in combination with IP adress in  case there are two users on the same computer
+
+    
     
     return 0;
 }
