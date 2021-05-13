@@ -168,6 +168,7 @@ class client {
                         
                         while (true) {
                             try {
+                                listen(adasdasdas)
                                 DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
                                 byte[] mess = null;
                                 mess = new byte[256];
