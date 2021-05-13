@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/apps/server.c
+/Users/stanislawczembor/Desktop/ds/ds_assignment/apps/server.c
 sys/types.h
 -
 sys/socket.h
@@ -25,10 +25,12 @@ stdio.h
 -
 pthread.h
 -
-lines.h
-/Users/dinokfenicky/Desktop/Distributed/assignemt1/assigment1/apps/lines.h
+arpa/inet.h
+-
+../include/lines.h
+/Users/stanislawczembor/Desktop/ds/ds_assignment/include/lines.h
 
-include/lines.h
+/Users/stanislawczembor/Desktop/ds/ds_assignment/include/lines.h
 unistd.h
 -
 

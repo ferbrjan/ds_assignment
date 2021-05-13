@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/client"
-  "client.jar"
   "CMakeFiles/client.dir/java_class_filelist"
   "CMakeFiles/client.dir/java_compiled_client"
+  "client.jar"
 )
 
 # Per-language clean rules from dependency scanning.
