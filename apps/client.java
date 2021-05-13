@@ -59,7 +59,13 @@ class client {
                     mess = new byte[256];
                     stream.read(mess);
                     String msg= new String(mess);
-                    System.out.println(msg);
+                    //stream = DataInputStream(sc_rec.getInputStream());
+                    //stream.read(mess);
+                    //String from_user= new String(mess);
+                    //stream = DataInputStream(sc_rec.getInputStream());
+                    //stream.read(mess);
+                    //String msg_id = new String(mess);
+                    System.out.println("MESSAGE " + msg + "\nEND\n");
                     System.out.flush();
                     sc_rec.close();
                     

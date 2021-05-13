@@ -60,6 +60,7 @@ int deleteReg(char* id);
 int numReg(void);
 int addCon(char* id,int port,char* ip);
 int searchCon(char* id);
+int getConIpPort(char* p_id, char* p_ip, char * p_port);
 int deleteCon(char* id);
 int numCon(void);
 int register_user(char* user, int sc);
@@ -371,6 +372,9 @@ void manage_request (int *s) {
                 }
                 send(sock , message , strlen(message) , 0 );
                 send(sock , from_user , strlen(from_user) , 0 );
+                char str[254];
+                sprintf(str, "%d", id);
+                send(sock , str , strlen(str) , 0 );
                 //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
             }
             
@@ -573,6 +577,19 @@ int searchCon(char* id)
     while(tmp != NULL)
     {
         if(strcmp(id, tmp->id) == 0)
+            return 1;
+        tmp = tmp->pNext;
+    }
+    return 0;//element does not exsist
+}
+int getConIpPort(char* p_id, char* p_ip, char * p_port)
+{
+    struct connected* tmp = pHeadCon;
+    while(tmp != NULL)
+    {
+        if(strcmp(p_id, tmp->id) == 0)
+            strcpy(p_ip, tmp->ip);
+            strcpy(p_port, tmp->port);
             return 1;
         tmp = tmp->pNext;
     }
