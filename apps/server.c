@@ -20,8 +20,21 @@ pthread_attr_t attr;
 pthread_mutex_t mutex1;
 pthread_cond_t signal1;
 
+
+
+struct messages{
+    char msg[256];
+    char from[254];
+    char to[254];
+    unsigned int msg_id;
+    struct messages* pNext;
+};
+
+
+
 struct registered{
     char id[254];
+    unsigned int msg_id;
     int port;
     struct registered* pNext;
 };
@@ -34,9 +47,12 @@ struct connected{
 
 struct registered* pHeadReg = NULL;
 struct connected* pHeadCon = NULL;
+struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
 int addReg(char* id, int port);
+int addMsg(char* p_msg, char* p_from, char* p_to);
+int searchMsg(char* p_msg, char* p_to);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
@@ -263,6 +279,9 @@ void manage_request (int *s) {
                 printf("\nConnection Failed \n");
                 //return -1;
             }
+            /*
+            HERE WE HAVE TO SEND ALL THE MESSAGES THAT ARE ADDRESED TO THE CONNECTED USER
+            */
             char hello[256];
             printf("type your message:");
             scanf("%s",hello);
@@ -416,6 +435,7 @@ int addReg(char* id, int port)
     strcpy(new->id,id);
     new->port = port;
     new->pNext = pHeadReg;
+    new->msg_id = 0;
     pHeadReg = new;
     return 0;
 }
@@ -430,6 +450,18 @@ int searchReg(char* id)
         tmp = tmp->pNext;
     }
     return 0;//element does not exsist
+}
+unsigned int getMsgId(char* id)
+{
+    struct registered* tmp = pHeadReg;
+    while(tmp != NULL)
+    {
+        if(strcmp(id, tmp->id) == 0)
+            tmp->msg_id++;
+            return tmp->msg_id;
+        tmp = tmp->pNext;
+    }
+    return -1;//element does not exsist
 }
 
 
@@ -521,4 +553,20 @@ int numCon()
         tmp = tmp->pNext;
     }
     return num;
+}
+int addMsg(char* p_msg, char* p_from, char* p_to)
+{
+    struct messages* new = (struct messages*)malloc(sizeof(struct messages));
+    strcpy(new->msg,p_msg);
+    strcpy(new->from,p_from);
+    strcpy(new->to,p_to);
+    new->msg_id = getMsgId(p_from);
+    new->pNext = pHeadMsg;
+    pHeadMsg = new;
+    return 0;
+}
+int searchMsg(char* p_msg, char* p_to)
+{
+    //TODO 
+    return 0;
 }
