@@ -48,12 +48,12 @@ class client {
         @Override
         public void run()
         {
-            System.out.println("im in the run");
+            //System.out.println("im in the run");
             while (true) {
                 try {
                     Socket sc_rec = this.sc.accept();
                     DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                    System.out.println("im in the loop");
+                    //System.out.println("im in the loop");
                     byte[] mess = null;
                     mess = new byte[256];
                     stream.read(mess);
@@ -91,15 +91,22 @@ class client {
             
             in.read(aux);
             String s = new String(aux);
-            System.out.println(s);
+            //System.out.println("byte returned is " + s + "\n");
             sc.close();
             
-            if ("REGISTER OK".equals(s.trim())){
+            if ("0".equals(s.trim())){
+                System.out.println("REGISTER OK");
                 return RC.OK; //CHANGE!
             }
-            else{
-                return RC.ERROR;
+            else if ("1".equals(s.trim())){
+                System.out.println("USERNAME IN USE");
+                return RC.ERROR; //CHANGE!
             }
+            else if ("2".equals(s.trim())){
+                System.out.println("REGISTER FAIL");
+                return RC.ERROR; //CHANGE!
+            }
+            return RC.ERROR;
         }
         catch (Exception e)
         {
@@ -139,15 +146,22 @@ class client {
             
             in.read(aux);
             String s = new String(aux);
-            System.out.println(s);
+            //System.out.println("byte returned is " + s + "\n");
             sc.close();
             
-            if ("UNREGISTER OK".equals(s.trim())){
+            if ("0".equals(s.trim())){
+                System.out.println("UNREGISTER OK");
                 return RC.OK; //CHANGE!
             }
-            else{
-                return RC.ERROR;
+            else if ("1".equals(s.trim())){
+                System.out.println("USER DOES NOT EXIST");
+                return RC.ERROR; //CHANGE!
             }
+            else if ("2".equals(s.trim())){
+                System.out.println("UNREGISTER FAIL");
+                return RC.ERROR; //CHANGE!
+            }
+            return RC.ERROR;
         }
         catch (Exception e)
         {
@@ -199,88 +213,36 @@ class client {
             ServerSocket listenSc = new ServerSocket(0);
             String listen_port = Integer.toString(listenSc.getLocalPort());
             message = String.valueOf(listen_port);
-            System.out.println("THE PORT NUMBER ON THE CLIENT SIDE IS: " + message);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            //System.out.println("THE PORT NUMBER ON THE CLIENT SIDE IS: " + message);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
             
             in.read(aux);
             String s = new String(aux);
-            System.out.println(s);
+            //System.out.println("byte returned is " + s + "\n");
             sc.close();
-            if ("CONNECT OK".equals(s.trim())){
+            
+            if ("0".equals(s.trim())){
                 //HERE WE NEED TO START A THREAD THAT IS LISTENING ON PORT 42005
-                
-                // THIS CREATED THE CONNECTION Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
-                /*
-                _readMessage = new (new Runnable()
-                                          {
-                    @Override
-                    public void run() {
-                        while (true) {
-                            try {
-                                Socket sc_rec = new Socket(_server, 42005);
-                                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                                byte[] mess = null;
-                                mess = new byte[256];
-                                stream.read(mess);
-                                String msg= new String(mess);
-                                System.out.println(msg);
-                                System.out.flush();
-                                sc_rec.close();
-                                
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                });
-                */
+                System.out.println("CONNECT OK");
                 _readMessage = new listen_th(listenSc);
                 _readMessage.start();
+                return RC.OK;
                 
             }
-            /*
-            
-            if ("CONNECT OK".equals(s.trim())){
-                Socket sc_rec = new Socket(_server,42005); //I am trying to connect to 42005
-                
-                _readMessage = new Thread(new Runnable()
-                                          {
-                    @Override
-                    public void run() {
-                        
-                        while (true) {
-                            try {
-                                DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                                byte[] mess = null;
-                                mess = new byte[256];
-                                stream.read(mess);
-                                String msg= new String(mess);
-                                System.out.println(msg);
-                                System.out.flush();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                });
-                
-                
-                _readMessage.start();
-                System.out.println("read message started");
-                */
-            if ("CONNECT FAIL".equals(s.trim())){
+            else if ("1".equals(s.trim())){
+                System.out.println("CONNECT FAIL , USER DOES NOT EXIST");
                 return RC.ERROR; //CHANGE!
             }
-            
-            else if ("USER ALREADY CONNECTED".equals(s.trim())){
+            else if ("2".equals(s.trim())){
+                System.out.println("USER ALREADY CONNECTED");
                 return RC.ERROR; //CHANGE!
             }
-            else if ("CONNECT FAIL, USER DOES NOT EXIST".equals(s.trim())){
+            else if ("3".equals(s.trim())){
+                System.out.println("CONNECT FAIL");
                 return RC.ERROR; //CHANGE!
             }
-
-            return RC.OK;
+            return RC.ERROR; //CHANGE!
         }
         catch (Exception e)
         {
@@ -320,25 +282,27 @@ class client {
             
             in.read(aux);
             String s = new String(aux);
-            System.out.println(s);
+            //System.out.println("byte returned is " + s + "\n");
             sc.close();
             
-            if ("DISCONNECT OK".equals(s.trim())){
+            if ("0".equals(s.trim())){
+                System.out.println("DISCONNECT OK");
                 _readMessage.stop();
+                return RC.OK; //CHANGE!
+            }
+            else if ("1".equals(s.trim())){
+                System.out.println("DISCONNECT FAIL / USER DOES NOT EXIST");
                 return RC.ERROR; //CHANGE!
             }
-            else if ("DISCONNECT FAIL".equals(s.trim())){
+            else if ("2".equals(s.trim())){
+                System.out.println("DISCONNECT FAIL / USER NOT CONNECTED");
                 return RC.ERROR; //CHANGE!
             }
-            else if ("DISCONNECT FAIL/ USER NOT CONNECTED".equals(s.trim())){
+            else if ("3".equals(s.trim())){
+                System.out.println("DISCONNECT FAIL");
                 return RC.ERROR; //CHANGE!
             }
-            else if ("DISCONNECT FAIL/ USER DOES NOT EXIST".equals(s.trim())){
-                return RC.ERROR; //CHANGE!
-            }
-            else{
-                 return RC.ERROR; //CHANGE!
-            }
+            return RC.ERROR;
         }
         catch (Exception e)
         {
@@ -356,10 +320,59 @@ class client {
 	 * @return USER_ERROR if the user is not connected (the message is queued for delivery)
 	 * @return ERROR the user does not exist or another error occurred
 	 */
-	static RC send(String user, String message) 
+	static RC send(String user, String message1)
 	{
 		// Write your code here
-		return RC.ERROR;
+        try{
+            Socket sc = new Socket(_server,_port); //New port number!!!!!
+            
+            DataOutputStream out = new DataOutputStream(sc.getOutputStream());
+            DataInputStream in = new DataInputStream(sc.getInputStream());
+            
+            
+            //System.out.println("DISCONNECT in progress");
+            String message = new String("SEND");
+            byte[] aux = null;
+            aux = new byte[256];
+            
+            out.writeBytes(message);
+            out.write('\0'); // insert the ASCII 0 at the end
+            message = user;
+            out.writeBytes(message);
+            out.write('\0');
+            message = message1;
+            out.writeBytes(message);
+            out.write('\0');
+            
+            in.read(aux);
+            String s = new String(aux);
+            //System.out.println("byte returned is " + s + "\n");
+            
+            
+            if ("0".equals(s.trim())){
+                in.read(aux);
+                s = new String(aux);
+                System.out.println("SEND OK");
+                sc.close();
+                return RC.OK; //CHANGE!
+            }
+            else if ("1".equals(s.trim())){
+                System.out.println("SEND FAIL / USER DOES NOT EXIST");
+                return RC.ERROR; //CHANGE!
+            }
+            else if ("2".equals(s.trim())){
+                System.out.println("SEND FAIL");
+                return RC.ERROR; //CHANGE!
+            }
+            return RC.ERROR;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Exception " + e.toString() );
+            e.printStackTrace() ;
+            return RC.ERROR;
+        }
+        
 	}
 	
 	/**

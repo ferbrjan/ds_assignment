@@ -50,13 +50,13 @@ struct connected* pHeadCon = NULL;
 struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
+int addReg(char* id, int port);
 int addMsg(char* p_msg, char* p_from, char* p_to);
 int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
-int addReg(char* id, int* port);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
-int addCon(char* id, int* port);
+int addCon(char* id,int port);
 int searchCon(char* id);
 int deleteCon(char* id);
 int numCon(void);
@@ -77,21 +77,27 @@ int register_user(char* user, int sc){
     int res = searchReg(user);
     if (res==1){
         printf("user already exists\n");
-        strcpy(buffer,"USERNAME IN USE");
+        strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"USERNAME IN USE");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
     if (res==0){
         addReg(user, 4200);
         printf("user registered\n");
         printf("number of  registered users is %i\n",numReg());
-        strcpy(buffer,"REGISTER OK");
+        strcpy(buffer,"0");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"REGISTER OK");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return 0;
     }
     else{
-        strcpy(buffer,"REGISTER FAIL");
+        strcpy(buffer,"2");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"REGISTER FAIL");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return 2;
     }
 }
@@ -103,31 +109,39 @@ int unregister_user(char* user, int sc){
     printf("In unregister_user()!\n");
     int res = searchReg(user);
     if (res==0){
-        printf("user does not exists\n");
-        strcpy(buffer,"USER DOES NOT EXIST");
+        strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("user does not exists\n");
+        //strcpy(buffer,"USER DOES NOT EXIST");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return 1;
     }
     if (res==1){
         res = searchCon(user);
         if (res==1){
-            printf("user needs to disconnect first\n");
-            strcpy(buffer,"UNREGISTER FAIL");
+            strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("user needs to disconnect first\n");
+            //strcpy(buffer,"UNREGISTER FAIL");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return 2;
         }
         else{
             deleteReg(user);
             printf("user unregistered\n");
             printf("number of  registered users is %i\n",numReg());
-            strcpy(buffer,"UNREGISTER OK");
+            strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"UNREGISTER OK");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return 0;
         }
     }
     else{
-        strcpy(buffer,"UNREGISTER FAIL");
+        strcpy(buffer,"2");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"UNREGISTER FAIL");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return 2;
     }
 }
@@ -140,29 +154,37 @@ int connect_user(char* user, int port, int sc){
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
-        strcpy(buffer,"CONNECT FAIL, USER DOES NOT EXIST");
+        strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"CONNECT FAIL, USER DOES NOT EXIST");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
     else{
         int res = searchCon(user);
         if (res==1){
             printf("user already connected\n");
-            strcpy(buffer,"USER ALREADY CONNECTED");
+            strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"USER ALREADY CONNECTED");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return  2;
         }
         if (res==0){
             addCon(user,port);
             printf("user connected\n");
             printf("number of  connected users is %i\n",numCon());
-            strcpy(buffer,"CONNECT OK");
+            strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"CONNECT OK");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return 0;
         }
         else{
-            strcpy(buffer,"CONNECT FAIL");
+            strcpy(buffer,"3");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"CONNECT FAIL");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return 2;
         }
     }
@@ -176,8 +198,10 @@ int disconnect_user(char* user, int sc){
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
-        strcpy(buffer,"DISCONNECT FAIL/ USER DOES NOT EXIST");
+        strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"DISCONNECT FAIL/ USER DOES NOT EXIST");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return  1;
     }
     if (res==1){
@@ -186,22 +210,26 @@ int disconnect_user(char* user, int sc){
             deleteCon(user);
             printf("user disconnecting\n");
             printf("number of  connected users is %i\n",numCon());
-            printf("user not registered\n");
-            strcpy(buffer,"DISCONNECT OK");
+            strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"DISCONNECT OK");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return  0;
         }
         else{
             printf("user not connected\n");
-            printf("user not registered\n");
-            strcpy(buffer,"DISCONNECT FAIL/ USER NOT CONNECTED");
+            strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            //strcpy(buffer,"DISCONNECT FAIL/ USER NOT CONNECTED");
+            //msg=sendMessage(sc, buffer, strlen(buffer));
             return 2;
         }
     }
     else{
-        strcpy(buffer,"DISCONNECT FAIL");
+        strcpy(buffer,"3");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        //strcpy(buffer,"DISCONNECT FAIL");
+        //msg=sendMessage(sc, buffer, strlen(buffer));
         return 3;
     }
 }
@@ -400,7 +428,7 @@ int main(int argc, char *argv[])
         server_addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.sin_family = AF_INET;
         server_addr.sin_port = htons(4200);
-        connection = bind(sd,&server_addr,sizeof(server_addr));
+        connection = bind(sd,(const struct sockaddr *) &server_addr,sizeof(server_addr));
         if (connection < 0){
             perror("Error in connecting");
             exit(1);
@@ -420,7 +448,7 @@ int main(int argc, char *argv[])
             pthread_create(&thread,&attr,manage_request,&sc); //HERE!!!!!
             pthread_mutex_lock(&mutex1);
             while(busy==TRUE){
-                pthread_cond_wait(&mutex1,&signal1);
+                pthread_cond_wait(&signal1,&mutex1);
             }
             pthread_mutex_unlock(&mutex1);
             busy=TRUE;
@@ -438,7 +466,7 @@ int main(int argc, char *argv[])
         close (sd);
         return(0);
 }
-int addReg(char* id, int* port)
+int addReg(char* id, int port)
 {
     struct registered* new = (struct registered*)malloc(sizeof(struct registered));
     strcpy(new->id,id);
@@ -507,7 +535,7 @@ int numReg()
     return num;
 }
 
-int addCon(char* id, int* port)
+int addCon(char* id, int port)
 {
     struct connected* new = (struct connected*)malloc(sizeof(struct connected));
     strcpy(new->id,id);
