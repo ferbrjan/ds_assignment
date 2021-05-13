@@ -54,14 +54,25 @@ class client {
                 try {
                     Socket sc_rec = this.sc.accept();
                     DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
+                    Scanner sc = new Scanner(sc_rec.getInputStream());
                     //System.out.println("im in the loop");
                     byte[] mess = null;
                     mess = new byte[256];
                     stream.read(mess);
                     String msg= new String(mess);
-                    System.out.println(msg);
+                    stream.read(mess);
+                    
+                    String user = new String(mess);
+                    //stream = DataInputStream(sc_rec.getInputStream());
+                    //stream.read(mess);
+                    //String from_user= new String(mess);
+                    //stream = DataInputStream(sc_rec.getInputStream());
+                    //stream.read(mess);
+                    //String msg_id = new String(mess);
+                    //System.out.println("what?");
+                    System.out.println("MESSAGE" + msg + "\nEND\nc>");
                     System.out.flush();
-                    sc_rec.close();
+                    //sc_rec.close();
                     
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -96,15 +107,15 @@ class client {
             sc.close();
             
             if ("0".equals(s.trim())){
-                System.out.println("REGISTER OK");
+                System.out.println("c> REGISTER OK");
                 return RC.OK; //CHANGE!
             }
             else if ("1".equals(s.trim())){
-                System.out.println("USERNAME IN USE");
+                System.out.println("c> USERNAME IN USE");
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
-                System.out.println("REGISTER FAIL");
+                System.out.println("c> REGISTER FAIL");
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR;
@@ -151,15 +162,15 @@ class client {
             sc.close();
             
             if ("0".equals(s.trim())){
-                System.out.println("UNREGISTER OK");
+                System.out.println("c> UNREGISTER OK");
                 return RC.OK; //CHANGE!
             }
             else if ("1".equals(s.trim())){
-                System.out.println("USER DOES NOT EXIST");
+                System.out.println("c> USER DOES NOT EXIST");
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
-                System.out.println("UNREGISTER FAIL");
+                System.out.println("c> UNREGISTER FAIL");
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR;
@@ -225,22 +236,22 @@ class client {
             sc.close();
             
             if ("0".equals(s.trim())){
-                System.out.println("CONNECT OK");
+                System.out.println("c> CONNECT OK");
                 _readMessage = new listen_th(listenSc);
                 _readMessage.start();
                 return RC.OK;
                 
             }
             else if ("1".equals(s.trim())){
-                System.out.println("CONNECT FAIL , USER DOES NOT EXIST");
+                System.out.println("c> CONNECT FAIL , USER DOES NOT EXIST");
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
-                System.out.println("USER ALREADY CONNECTED");
+                System.out.println("c> USER ALREADY CONNECTED");
                 return RC.ERROR; //CHANGE!
             }
             else if ("3".equals(s.trim())){
-                System.out.println("CONNECT FAIL");
+                System.out.println("c> CONNECT FAIL");
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR; //CHANGE!
@@ -288,20 +299,20 @@ class client {
             connected_port="0";
             
             if ("0".equals(s.trim())){
-                System.out.println("DISCONNECT OK");
+                System.out.println("c> DISCONNECT OK");
                 _readMessage.stop();
                 return RC.OK;
             }
             else if ("1".equals(s.trim())){
-                System.out.println("DISCONNECT FAIL / USER DOES NOT EXIST");
+                System.out.println("c> DISCONNECT FAIL / USER DOES NOT EXIST");
                 return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
-                System.out.println("DISCONNECT FAIL / USER NOT CONNECTED");
+                System.out.println("c> DISCONNECT FAIL / USER NOT CONNECTED");
                 return RC.ERROR;
             }
             else if ("3".equals(s.trim())){
-                System.out.println("DISCONNECT FAIL");
+                System.out.println("c> DISCONNECT FAIL");
                 return RC.ERROR;
             }
             return RC.ERROR;
@@ -357,16 +368,16 @@ class client {
             if ("0".equals(s.trim())){
                 in.read(aux);
                 s = new String(aux);
-                System.out.println("SEND OK");
+                System.out.println("c> SEND OK");
                 sc.close();
                 return RC.OK;
             }
             else if ("1".equals(s.trim())){
-                System.out.println("SEND FAIL / USER DOES NOT EXIST");
+                System.out.println("c> SEND FAIL / USER DOES NOT EXIST");
                 return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
-                System.out.println("SEND FAIL");
+                System.out.println("c> SEND FAIL");
                 return RC.ERROR;
             }
             return RC.ERROR;
