@@ -42,6 +42,7 @@ struct registered{
 struct connected{
     char id[254];
     int port;
+    char ip[254];
     struct connected* pNext;
 };
 
@@ -56,15 +57,15 @@ int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
 int searchReg(char* id);
 int deleteReg(char* id);
 int numReg(void);
-int addCon(char* id,int port);
+int addCon(char* id,int port,char* ip);
 int searchCon(char* id);
 int deleteCon(char* id);
 int numCon(void);
 int register_user(char* user, int sc);
 int unregister_user(char* user, int sc);
-int connect_user(char* user, int port, int sc);
+int connect_user(char* user, int port, int sc,char* ip);
 int disconnect_user(char* user, int sc);
-int send_req_user();
+int send_req_user(char* user, char* message,char* port, int sc);
 int send_mess_ack_user();
 int send_mess_to_user();
 
@@ -147,10 +148,11 @@ int unregister_user(char* user, int sc){
 }
 
 //CONNECT
-int connect_user(char* user, int port, int sc){
+int connect_user(char* user, int port, int sc,char* ip){
     char buffer[MAX_LINE];
     int msg;
     printf("In connect_user()!\n");
+    printf("User's ip is:%s\n",ip);
     int res = searchReg(user);
     if (res==0){
         printf("user not registered\n");
@@ -171,7 +173,7 @@ int connect_user(char* user, int port, int sc){
             return  2;
         }
         if (res==0){
-            addCon(user,port);
+            addCon(user,port,ip);
             printf("user connected\n");
             printf("number of  connected users is %i\n",numCon());
             strcpy(buffer,"0");
@@ -235,7 +237,8 @@ int disconnect_user(char* user, int sc){
 }
 
 //SEND_REQ
-int send_req_user(){
+int send_req_user(char* user, char* message,char* port, int sc){
+    
     return 0;
 }
 
@@ -284,12 +287,12 @@ void manage_request (int *s) {
             char buffer2[MAX_LINE];
             msg = readLine(sc, buffer2, MAX_LINE);
             int port = atoi(buffer2);
-            res=connect_user(buffer,port,sc);
             //use getpeername to extract the  ip from the socket and then connect with the particular user
             struct sockaddr_in client_server_addr;
             socklen_t serv_len = sizeof(client_server_addr);
             getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
             printf("Server socket's peer ip : %s\n", inet_ntoa(client_server_addr.sin_addr));
+            res=connect_user(buffer,port,sc,inet_ntoa(client_server_addr.sin_addr));
             close(sc);
             printf("The port number is:%d\n", port);
             printf("The username is:%s\n",user_name);
@@ -327,47 +330,6 @@ void manage_request (int *s) {
             printf("Hello message sent\n");
             valread = read( sock , buffer, 1024);
             printf("%s\n",buffer );
-            //return 0;
-
-            //Create another socket for communication
-            /*
-            if (res==0){
-                socklen_t size;
-                struct sockaddr_in server_addr,client_addr;
-                int err;
-                int connection;
-                //Create and set up socket
-                int sd =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                if (sd < 0) {
-                    perror("Error in socket");
-                    exit(1);
-                }
-                server_addr.sin_port = htons(port);
-                connection = bind(sd,&server_addr,sizeof(server_addr));
-                if (connection < 0) {
-                    perror("Error in connecting");
-                    exit(1);
-                }
-                connection = listen(sd,5);
-                if (connection < 0) {
-                    perror("Error in connecting");
-                    exit(1);
-                }
-                client_sc = accept(sd,(struct sockaddr *)&client_addr,&size);
-                if (getsockname(client_sc, (struct sockaddr *)&client_addr, &size) == -1){
-                    perror("getsockname");
-                }
-                else{
-                    printf("port number %d\n", ntohs(client_addr.sin_port));
-                }
-            }
-            //FOR TESTING
-            while(1){
-                msg=readLine(0,buffer2,MAX_LINE);
-                msg=sendMessage(client_sc, buffer2, strlen(buffer2));
-            
-            }
-             */
             break;
         }
         else if(strncmp(buffer,"DISCONNECT",10)==0){
@@ -380,8 +342,14 @@ void manage_request (int *s) {
             break;
         }
         else if(strncmp(buffer,"SEND",4)==0){
-            res=send_req_user();
-            res=send_mess_to_user();
+            char buffer2[MAX_LINE],port[MAX_LINE];
+            msg = readLine(sc, buffer, MAX_LINE);
+            printf("The reciver is:%s\n", buffer);
+            msg = readLine(sc, buffer2, MAX_LINE);
+            printf("The message is:%s\n", buffer2);
+            msg = readLine(sc, port, MAX_LINE);
+            printf("The port is:%s\n", port);
+            res=send_req_user(buffer,buffer2,port,sc);
             close(sc);
             break;
         }
@@ -535,11 +503,12 @@ int numReg()
     return num;
 }
 
-int addCon(char* id, int port)
+int addCon(char* id, int port,char* ip)
 {
     struct connected* new = (struct connected*)malloc(sizeof(struct connected));
     strcpy(new->id,id);
     new->port = port;
+    strcpy(new->ip,ip);
     printf("port number for user: %s is %i\n",new->id,new->port);
     new->pNext = pHeadCon;
     pHeadCon = new;

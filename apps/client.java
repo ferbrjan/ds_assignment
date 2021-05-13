@@ -22,6 +22,7 @@ class client {
 		ERROR,
 		USER_ERROR	
 	};
+    public static String connected_port = "0";
 	
 	/******************* ATTRIBUTES *******************/
 	
@@ -213,6 +214,7 @@ class client {
             ServerSocket listenSc = new ServerSocket(0);
             String listen_port = Integer.toString(listenSc.getLocalPort());
             message = String.valueOf(listen_port);
+            connected_port=listen_port;
             //System.out.println("THE PORT NUMBER ON THE CLIENT SIDE IS: " + message);  //any available port!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             out.writeBytes(message);
             out.write('\0');
@@ -223,7 +225,6 @@ class client {
             sc.close();
             
             if ("0".equals(s.trim())){
-                //HERE WE NEED TO START A THREAD THAT IS LISTENING ON PORT 42005
                 System.out.println("CONNECT OK");
                 _readMessage = new listen_th(listenSc);
                 _readMessage.start();
@@ -263,7 +264,7 @@ class client {
 	{
 		// Write your code here
         try{
-            Socket sc = new Socket(_server,_port); //New port number!!!!!
+            Socket sc = new Socket(_server,_port);
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
@@ -284,23 +285,24 @@ class client {
             String s = new String(aux);
             //System.out.println("byte returned is " + s + "\n");
             sc.close();
+            connected_port="0";
             
             if ("0".equals(s.trim())){
                 System.out.println("DISCONNECT OK");
                 _readMessage.stop();
-                return RC.OK; //CHANGE!
+                return RC.OK;
             }
             else if ("1".equals(s.trim())){
                 System.out.println("DISCONNECT FAIL / USER DOES NOT EXIST");
-                return RC.ERROR; //CHANGE!
+                return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
                 System.out.println("DISCONNECT FAIL / USER NOT CONNECTED");
-                return RC.ERROR; //CHANGE!
+                return RC.ERROR;
             }
             else if ("3".equals(s.trim())){
                 System.out.println("DISCONNECT FAIL");
-                return RC.ERROR; //CHANGE!
+                return RC.ERROR;
             }
             return RC.ERROR;
         }
@@ -324,7 +326,7 @@ class client {
 	{
 		// Write your code here
         try{
-            Socket sc = new Socket(_server,_port); //New port number!!!!!
+            Socket sc = new Socket(_server,_port);
             
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());
             DataInputStream in = new DataInputStream(sc.getInputStream());
@@ -343,6 +345,9 @@ class client {
             message = message1;
             out.writeBytes(message);
             out.write('\0');
+            message = connected_port;
+            out.writeBytes(message);
+            out.write('\0');
             
             in.read(aux);
             String s = new String(aux);
@@ -354,15 +359,15 @@ class client {
                 s = new String(aux);
                 System.out.println("SEND OK");
                 sc.close();
-                return RC.OK; //CHANGE!
+                return RC.OK;
             }
             else if ("1".equals(s.trim())){
                 System.out.println("SEND FAIL / USER DOES NOT EXIST");
-                return RC.ERROR; //CHANGE!
+                return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
                 System.out.println("SEND FAIL");
-                return RC.ERROR; //CHANGE!
+                return RC.ERROR;
             }
             return RC.ERROR;
         }
