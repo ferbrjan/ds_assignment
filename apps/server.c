@@ -51,6 +51,7 @@ struct connected* pHeadCon = NULL;
 struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
+int searchConIpPort(char* p_id, char * p_ip, int p_port);
 int addReg(char* id, int port);
 int addMsg(char* p_msg, char* p_from, char* p_to);
 int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
@@ -593,6 +594,18 @@ int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)
         }
         prev = tmp;
         tmp = tmp->pNext;
+    }
+    return 0;//element does not exsist
+}
+int searchConIpPort(char* p_id, char * p_ip, int p_port)
+{
+     struct connected* tmp = pHeadCon;
+    while(tmp != NULL)
+    {
+        if((strcmp(p_ip, tmp->ip) == 0) && (p_port == tmp->port))
+            strcpy(p_id, tmp->id);
+        tmp = tmp->pNext;
+        return 1;//it is a match
     }
     return 0;//element does not exsist
 }
