@@ -42,7 +42,7 @@ struct registered{
 struct connected{
     char id[254];
     int port;
-    struct registered* pNext;
+    struct connected* pNext;
 };
 
 struct registered* pHeadReg = NULL;
@@ -51,7 +51,7 @@ struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
 int addMsg(char* p_msg, char* p_from, char* p_to);
-int searchMsg(char* p_msg, char* p_to);
+int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
 int addReg(char* id, int* port);
 int searchReg(char* id);
 int deleteReg(char* id);
@@ -250,17 +250,22 @@ void manage_request (int *s) {
             break;
         }
         else if(strncmp(buffer,"CONNECT",7)==0){
+            char user_name[254];;
             msg = readLine(sc, buffer, MAX_LINE);
+            strcpy(user_name, buffer);
             char buffer2[MAX_LINE];
             msg = readLine(sc, buffer2, MAX_LINE);
             int port = atoi(buffer2);
             res=connect_user(buffer,port,sc);
-            close(sc);
-            printf("Manage request:\nThe port number is:%d\n", port);
-            char* ip = "127.0.0.1";
-            printf("The id number is:%s\n", ip);
-            int sock = 0, valread;
+            //use getpeername to extract the  ip from the socket and then connect with the particular user
             struct sockaddr_in client_server_addr;
+            socklen_t serv_len = sizeof(client_server_addr);
+            getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
+            printf("Server socket's peer ip : %s\n", inet_ntoa(client_server_addr.sin_addr));
+            close(sc);
+            printf("The port number is:%d\n", port);
+            printf("The username is:%s\n",user_name);
+            int sock = 0, valread;
             if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
             {
                 printf("\n Socket creation error \n");
@@ -269,7 +274,7 @@ void manage_request (int *s) {
             client_server_addr.sin_family = AF_INET;
             client_server_addr.sin_port = htons(port);
             // Convert IPv4 and IPv6 addresses from text to binary form
-            if(inet_pton(AF_INET, ip, &client_server_addr.sin_addr)<=0) 
+            if(inet_pton(AF_INET, inet_ntoa(client_server_addr.sin_addr), &client_server_addr.sin_addr)<=0) 
             {
                 printf("\nInvalid address/ Address not supported \n");
                 //return -1;
@@ -279,9 +284,13 @@ void manage_request (int *s) {
                 printf("\nConnection Failed \n");
                 //return -1;
             }
-            /*
-            HERE WE HAVE TO SEND ALL THE MESSAGES THAT ARE ADDRESED TO THE CONNECTED USER
-            */
+            while(1)//loop to search for all the messages for the connected user
+            {
+                printf("im in the while(1) loop that i will be sending the messages back\n");
+                break;
+                //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
+            }
+            
             char hello[256];
             printf("type your message:");
             scanf("%s",hello);
@@ -457,7 +466,7 @@ unsigned int getMsgId(char* id)
     while(tmp != NULL)
     {
         if(strcmp(id, tmp->id) == 0)
-            tmp->msg_id++;
+            tmp->msg_id += 1;
             return tmp->msg_id;
         tmp = tmp->pNext;
     }
@@ -543,6 +552,7 @@ int deleteCon(char* id)
     return -1;//element does not exsist
 }
 
+
 int numCon()
 {
     int num = 0;
@@ -565,8 +575,27 @@ int addMsg(char* p_msg, char* p_from, char* p_to)
     pHeadMsg = new;
     return 0;
 }
-int searchMsg(char* p_msg, char* p_to)
+int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)
 {
-    //TODO 
-    return 0;
+    struct messages* prev = NULL;
+    struct messages* tmp = pHeadMsg;
+    while(tmp != NULL)
+    {
+        if(strcmp(p_to, tmp->to) == 0)
+        {
+            strcpy(p_msg, tmp->msg);
+            strcpy(p_from, tmp->from);
+            p_msg_id = &tmp->msg_id;
+            //now we need to delete this message from the message list
+            if(prev!=NULL)
+                prev->pNext = tmp->pNext;
+            else
+                pHeadMsg = tmp->pNext;
+            free(tmp);
+            return 1;
+        }
+        prev = tmp;
+        tmp = tmp->pNext;
+    }
+    return 0;//element does not exsist
 }
