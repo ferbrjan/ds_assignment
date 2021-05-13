@@ -25,7 +25,7 @@ pthread_cond_t signal1;
 struct messages{
     char msg[256];
     char from[254];
-    char to[254];
+    char to[254]; 
     unsigned int msg_id;
     struct messages* pNext;
 };
@@ -359,7 +359,18 @@ void manage_request (int *s) {
             while(1)//loop to search for all the messages for the connected user
             {
                 printf("im in the while(1) loop that i will be sending the messages back\n");
-                break;
+                int i;
+                char message[256];
+                char from_user[254];
+                unsigned int id;
+                i = searchMsg(from_user,id, message, user_name);
+                printf("did we find any messages?\n return from function:%d\nmessage:%s\nfrom_user:%s\n",i,message,from_user);
+                if(i == 0)
+                {
+                    break;
+                }
+                send(sock , message , strlen(message) , 0 );
+                send(sock , from_user , strlen(from_user) , 0 );
                 //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
             }
             
