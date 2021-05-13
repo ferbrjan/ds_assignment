@@ -239,7 +239,45 @@ int disconnect_user(char* user, int sc){
 
 //SEND_REQ
 int send_req_user(char* user, char* message,char* port, int sc){ //user = reciever , message = message to be sent, port = port of the connected user in  order to search for his username in combination with IP adress in  case there are two users on the same computer
-
+    char buffer[MAX_LINE];
+    int msg;
+    char sender[254];
+    int port_number=atoi(port);
+    
+    struct sockaddr_in client_server_addr;
+    socklen_t serv_len = sizeof(client_server_addr);
+    getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
+    
+    searchConIpPort((char*)&sender,inet_ntoa(client_server_addr.sin_addr),port_number);
+    
+    printf("NAME OF THE SENDER IS: %s\n",sender);
+    
+    int res = searchReg(user);
+    
+    if (res==1){
+        printf("USER REGISTERED");
+        res = searchCon(user);
+        if (res==1){
+            printf("USER CONNECTED");
+            strcpy(buffer,"0");
+            msg=sendMessage(sc, buffer, strlen(buffer));
+            return 0;
+        }
+        else{
+            printf("USER NOT CONNECTED");
+            addMsg(message,sender,user);
+            strcpy(buffer,"0");
+            msg=sendMessage(sc, buffer, strlen(buffer));
+            return 0;
+        }
+    }
+    else if (res==0){
+        printf("USER DOES NOT EXIST");
+        strcpy(buffer,"1");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        return 1;
+    }
+    
     
     
     return 0;
