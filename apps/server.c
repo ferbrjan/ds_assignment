@@ -26,7 +26,6 @@ struct messages{
     char msg[256];
     char from[254];
     char to[254]; 
-    int ACK;
     unsigned int msg_id;
     struct messages* pNext;
 };
@@ -395,7 +394,6 @@ void manage_request (int *s) {
             char from_user[254];
             unsigned int id;
             i = searchMsg(from_user,&id, message, user_name);
-            i = searchMsg(from_user,&id, message, user_name);
             
             if (i>0){
                 if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
@@ -421,7 +419,6 @@ void manage_request (int *s) {
                     strcat(message, "\n");
                     msg=sendMessage(sock, message, strlen(message));
 
-                    i = searchMsg(from_user,&id, message, user_name);//IS THIS OK?? o.O
                     i = searchMsg(from_user,&id, message, user_name);
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
@@ -688,7 +685,6 @@ int addMsg(char* p_msg, char* p_from, char* p_to)
     strcpy(new->to,p_to);
     new->msg_id = getMsgId(p_from);
     printf("the last message addes for user: %s has ID:%d\n", new->from, new->msg_id);
-    new->ACK = 0;
     new->pNext = pHeadMsg;
     pHeadMsg = new;
     return 0;
@@ -704,22 +700,13 @@ int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)//se
             strcpy(p_msg, tmp->msg);
             strcpy(p_from, tmp->from);
             *p_msg_id = tmp->msg_id;
-            printf("the id number of message is:%d\n", *p_msg_id);
-            if(tmp->ACK == 1)
-            {
             //now we need to delete this message from the message list
-                if(prev!=NULL)
-                    prev->pNext = tmp->pNext;
-                else
-                    pHeadMsg = tmp->pNext;
-                free(tmp);
-                return 2;//send only the ACK
-            }
+            if(prev!=NULL)
+                prev->pNext = tmp->pNext;
             else
-            {
-                tmp->ACK = 1;
-                return 1;//send the message 
-            }
+                pHeadMsg = tmp->pNext;
+            free(tmp);
+            return 1;//send only the ACK
         }
         prev = tmp;
         tmp = tmp->pNext;
