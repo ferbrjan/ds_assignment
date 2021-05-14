@@ -52,8 +52,9 @@ struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
 int searchConIpPort(char* p_id, char * p_ip, int p_port);
+unsigned int getMsgId(char* id);
 int addReg(char* id, int port);
-int addMsg(char* p_msg, char* p_from, char* p_to);
+int addMsg(char* p_msg, char* p_from, char* p_to, unsigned int p_msg_id);
 int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
 int searchReg(char* id);
 int deleteReg(char* id);
@@ -290,7 +291,8 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
                 //return -1;
             }
             //printf("I am sending to IP: %s PORT: %s\n",user_ip,user_port);
-            addMsg(message,sender,user);
+            unsigned int tmp_id = getMsgId(sender);
+            addMsg(message,sender,user, tmp_id);
             unsigned int id;
             int i = searchMsg(sender,&id, message, user);
             char str[254];
@@ -302,11 +304,46 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
             msg=sendMessage(sock, message, strlen(message));
             close(sock);
             printf("message was sent\n");
+
+            //OPEN CONNECTION FOR SENDER TO SEND ACK
+            getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
+            searchConIpPort((char*)sender,inet_ntoa(client_server_addr.sin_addr),port_number);
+            getConIpPort(sender,user_ip,user_port);
+            sock=0;
+            user_port_number=atoi(user_port);
+            //Connection to the socket
+            if ((sock = socket(AF_INET,SOCK_STREAM, 0)) < 0)
+            {
+                printf("\n Socket creation error \n");
+                //return -1;
+            }
+            client_server_addr.sin_family = AF_INET;
+            client_server_addr.sin_port = htons(user_port_number); //port number of reciever
+            // Convert IPv4 and IPv6 addresses from text to binary form
+            if(inet_pton(AF_INET, user_ip , &client_server_addr.sin_addr)<=0) //IP of  reciever
+            {
+                printf("\nInvalid address/ Address not supported \n");
+                //return -1;
+            }
+            if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
+            {
+                printf("\nConnection Failed \n");
+                //return -1;
+            }
+            
+            sprintf(str, "%d ", id);
+            msg=sendMessage(sock, str, strlen(str));
+            msg=sendMessage(sock, "ACK ", 5);
+            msg=sendMessage(sock, "\n", 2);//4/5?
+            close(sock);//close connection with the sender
+            printf("ACK was sent\n");
+
             return 0;
         }
         else{
             printf("USER NOT CONNECTED\n");
-            addMsg(message,sender,user);
+            unsigned int tmp_id = getMsgId(sender);
+            addMsg(message,sender,user, tmp_id);
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
             return 0;
@@ -411,6 +448,10 @@ void manage_request (int *s) {
                         close(sock);
                         break;
                     }
+                    if(strcmp(from_user,"ACK")!=0)
+                    {
+                        addMsg(" ", "ACK", from_user, id);
+                    }
                     char str[254];
                     sprintf(str, "%d ", id);
                     msg=sendMessage(sock, str, strlen(str));
@@ -418,7 +459,6 @@ void manage_request (int *s) {
                     msg=sendMessage(sock, from_user, strlen(from_user));
                     strcat(message, "\n");
                     msg=sendMessage(sock, message, strlen(message));
-
                     i = searchMsg(from_user,&id, message, user_name);
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
@@ -566,7 +606,7 @@ unsigned int getMsgId(char* id)
         }
         tmp = tmp->pNext;
     }
-    return -1;//element does not exsist
+    return 0;//element does not exsist
 }
 
 
@@ -677,13 +717,13 @@ int numCon()
     }
     return num;
 }
-int addMsg(char* p_msg, char* p_from, char* p_to)
+int addMsg(char* p_msg, char* p_from, char* p_to,unsigned int p_msg_id)
 {
     struct messages* new = (struct messages*)malloc(sizeof(struct messages));
     strcpy(new->msg,p_msg);
     strcpy(new->from,p_from);
     strcpy(new->to,p_to);
-    new->msg_id = getMsgId(p_from);
+    new->msg_id = p_msg_id;
     printf("the last message addes for user: %s has ID:%d\n", new->from, new->msg_id);
     new->pNext = pHeadMsg;
     pHeadMsg = new;
