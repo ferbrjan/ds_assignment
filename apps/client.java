@@ -49,28 +49,32 @@ class client {
         @Override
         public void run()
         {
-            //System.out.println("im in the run");
             while (true) {
                 try {
                     Socket sc_rec = this.sc.accept();
                     DataInputStream stream = new DataInputStream(sc_rec.getInputStream());
-                    Scanner sc = new Scanner(sc_rec.getInputStream());
                     //System.out.println("im in the loop");
                     byte[] mess = null;
                     mess = new byte[256];
                     stream.read(mess);
                     String msg= new String(mess);
-                    //stream = DataInputStream(sc_rec.getInputStream());
-                    //stream.read(mess);
-                    //String from_user= new String(mess);
-                    //stream = DataInputStream(sc_rec.getInputStream());
-                    //stream.read(mess);
-                    //String msg_id = new String(mess);
-                    //System.out.println("what?");
-                    System.out.println("MESSAGE" + msg + "\nEND\nc>");
-                    System.out.flush();
-                    //sc_rec.close();
-                    
+                    String[] messages = msg.split("\n");
+                    for(int s =0; s<messages.length - 1; s++)
+                    {
+                        String[] info = messages[s].split(" ");
+                        if(!messages[s].isEmpty())
+                        {
+                            StringBuffer message = new StringBuffer();
+                            for(int i = 2; i < info.length; i++)
+                            {
+                                message.append(info[i] + " ");
+                            }
+                            String final_msg = message.toString();
+                            System.out.println("MESSAGE " + info[0] + " FROM " +  info[1] + ":\n" +  final_msg + "\nEND");
+                            System.out.flush();
+                        }
+                    }
+                    System.out.println("c>");                    
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

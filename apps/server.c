@@ -291,9 +291,15 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
                 //return -1;
             }
             //printf("I am sending to IP: %s PORT: %s\n",user_ip,user_port);
-            msg=sendMessage(sock, " 23  FROM:", 10);
-            strcat(sender, "\n");
+            addMsg(message,sender,user);
+            unsigned int id;
+            int i = searchMsg(sender,&id, message, user);
+            char str[254];
+            sprintf(str, "%d ", id);
+            msg=sendMessage(sock, str, strlen(str));
+            strcat(sender, " ");
             msg=sendMessage(sock, sender, strlen(sender));
+            strcat(message, "\n");
             msg=sendMessage(sock, message, strlen(message));
             close(sock);
             printf("message was sent\n");
@@ -389,6 +395,7 @@ void manage_request (int *s) {
             char from_user[254];
             unsigned int id;
             i = searchMsg(from_user,&id, message, user_name);
+            i = searchMsg(from_user,&id, message, user_name);
             
             if (i>0){
                 if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
@@ -407,12 +414,15 @@ void manage_request (int *s) {
                         break;
                     }
                     char str[254];
-                    sprintf(str, " %d  FROM:", id);
+                    sprintf(str, "%d ", id);
                     msg=sendMessage(sock, str, strlen(str));
-                    strcat(from_user, "\n");
+                    strcat(from_user, " ");
                     msg=sendMessage(sock, from_user, strlen(from_user));
+                    strcat(message, "\n");
                     msg=sendMessage(sock, message, strlen(message));
+
                     i = searchMsg(from_user,&id, message, user_name);//IS THIS OK?? o.O
+                    i = searchMsg(from_user,&id, message, user_name);
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
 
