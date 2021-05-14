@@ -448,17 +448,73 @@ void manage_request (int *s) {
                         close(sock);
                         break;
                     }
+                    printf("FROM_USER IS WTF!!!!!: %s\n",from_user);
                     if(strcmp(from_user,"ACK")!=0)
                     {
-                        addMsg(" ", "ACK", from_user, id);
+                        printf("NOT AN ACK\n");
+                        char str[254];
+                        sprintf(str, "%d ", id);
+                        msg=sendMessage(sock, str, strlen(str));
+                        char reciever [254];
+                        strcpy(reciever,from_user);
+                        strcat(from_user, " ");
+                        msg=sendMessage(sock, from_user, strlen(from_user));
+                        strcat(message, "\n");
+                        msg=sendMessage(sock, message, strlen(message));
+                        printf("FROM_USER IS!!!!!: %sh\n",reciever);
+                        res = searchCon(reciever);
+                        printf("FROM USER IS CONNECTED? %i\n",res);
+                        if (res==1){
+                            printf("SENDER IS CONNECTED SENDING MESSAGE TO RECIEVER\n");
+                            struct sockaddr_in sclient_server_addr;
+                            socklen_t sserv_len = sizeof(sclient_server_addr);
+                            printf("username is old: %sh\n",from_user);
+                            char user_ip[254];
+                            char user_port[254];
+                            int user_port_number;
+                            getConIpPort(reciever,user_ip,user_port);
+                            printf("port for connection is: %s ip for connection is: %s\n",user_port,user_ip);
+                            int soc=0;
+                            user_port_number=atoi(user_port);
+                            printf("user port number is %i\n",user_port_number);
+                            //Connection to the socket
+                            if ((soc = socket(AF_INET,SOCK_STREAM, 0)) < 0)
+                            {
+                                printf("\n Socket creation error \n");
+                                //return -1;
+                            }
+                            sclient_server_addr.sin_family = AF_INET;
+                            sclient_server_addr.sin_port = htons(user_port_number); //port number of reciever
+                            // Convert IPv4 and IPv6 addresses from text to binary form
+                            if(inet_pton(AF_INET, user_ip , &sclient_server_addr.sin_addr)<=0) //IP of  reciever
+                            {
+                                printf("\nInvalid address/ Address not supported \n");
+                                //return -1;
+                            }
+                            if (connect(soc, (struct sockaddr *)&sclient_server_addr, sizeof(sclient_server_addr)) < 0)
+                            {
+                                printf("\nConnection Failed \n");
+                                //return -1;
+                            }
+                            sprintf(str, "%d ", id);
+                            msg=sendMessage(soc, str, strlen(str));
+                            msg=sendMessage(soc, "ACK ", 5);
+                            msg=sendMessage(soc, "\n", 2);
+                            close(soc);
+                        }
+                        else{
+                            addMsg(" ", "ACK", from_user, id);
+                        }
                     }
-                    char str[254];
-                    sprintf(str, "%d ", id);
-                    msg=sendMessage(sock, str, strlen(str));
-                    strcat(from_user, " ");
-                    msg=sendMessage(sock, from_user, strlen(from_user));
-                    strcat(message, "\n");
-                    msg=sendMessage(sock, message, strlen(message));
+                    else{
+                        char str[254];
+                        sprintf(str, "%d ", id);
+                        msg=sendMessage(sock, str, strlen(str));
+                        strcat(from_user, " ");
+                        msg=sendMessage(sock, from_user, strlen(from_user));
+                        strcat(message, "\n");
+                        msg=sendMessage(sock, message, strlen(message));
+                    }
                     i = searchMsg(from_user,&id, message, user_name);
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
