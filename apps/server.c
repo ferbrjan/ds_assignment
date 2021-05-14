@@ -397,19 +397,20 @@ void manage_request (int *s) {
                 }
                 while(1)//loop to search for all the messages for the connected user
                 {
-                    printf("im in the while(1) loop that i will be sending the messages back\n");
-                    i = searchMsg(from_user,id, message, user_name);
+                    //printf("im in the while(1) loop that i will be sending the messages back\n");
                     printf("did we find any messages?\n return from function:%d\nmessage:%s\nfrom_user:%s\n",i,message,from_user);
                     if(i == 0)
                     {
                         close(sock);
                         break;
                     }
-                    send(sock , message , strlen(message) , 0 );
-                    send(sock , from_user , strlen(from_user) , 0 );
                     char str[254];
-                    sprintf(str, "%d", id);
-                    send(sock , str , strlen(str) , 0 );
+                    sprintf(str, " %d  FROM:", id);
+                    msg=sendMessage(sock, str, strlen(str));
+                    strcat(from_user, "\n");
+                    msg=sendMessage(sock, from_user, strlen(from_user));
+                    msg=sendMessage(sock, message, strlen(message));
+                    i = searchMsg(from_user,id, message, user_name);//IS THIS OK?? o.O
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
 

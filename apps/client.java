@@ -60,9 +60,6 @@ class client {
                     mess = new byte[256];
                     stream.read(mess);
                     String msg= new String(mess);
-                    stream.read(mess);
-                    
-                    String user = new String(mess);
                     //stream = DataInputStream(sc_rec.getInputStream());
                     //stream.read(mess);
                     //String from_user= new String(mess);
