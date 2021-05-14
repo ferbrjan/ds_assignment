@@ -26,6 +26,7 @@ struct messages{
     char msg[256];
     char from[254];
     char to[254]; 
+    int ACK;
     unsigned int msg_id;
     struct messages* pNext;
 };
@@ -387,7 +388,7 @@ void manage_request (int *s) {
             char message[256];
             char from_user[254];
             unsigned int id;
-            i = searchMsg(from_user,id, message, user_name);
+            i = searchMsg(from_user,&id, message, user_name);
             
             if (i>0){
                 if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
@@ -399,6 +400,7 @@ void manage_request (int *s) {
                 {
                     //printf("im in the while(1) loop that i will be sending the messages back\n");
                     printf("did we find any messages?\n return from function:%d\nmessage:%s\nfrom_user:%s\n",i,message,from_user);
+                    printf("the number of the id of this message in while(1 )loop is %d\n", id);
                     if(i == 0)
                     {
                         close(sock);
@@ -410,7 +412,7 @@ void manage_request (int *s) {
                     strcat(from_user, "\n");
                     msg=sendMessage(sock, from_user, strlen(from_user));
                     msg=sendMessage(sock, message, strlen(message));
-                    i = searchMsg(from_user,id, message, user_name);//IS THIS OK?? o.O
+                    i = searchMsg(from_user,&id, message, user_name);//IS THIS OK?? o.O
                     //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
 
@@ -675,11 +677,13 @@ int addMsg(char* p_msg, char* p_from, char* p_to)
     strcpy(new->from,p_from);
     strcpy(new->to,p_to);
     new->msg_id = getMsgId(p_from);
+    printf("the last message addes for user: %s has ID:%d\n", new->from, new->msg_id);
+    new->ACK = 0;
     new->pNext = pHeadMsg;
     pHeadMsg = new;
     return 0;
 }
-int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)
+int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)//search and delete
 {
     struct messages* prev = NULL;
     struct messages* tmp = pHeadMsg;
@@ -689,14 +693,23 @@ int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)
         {
             strcpy(p_msg, tmp->msg);
             strcpy(p_from, tmp->from);
-            p_msg_id = &tmp->msg_id;
+            *p_msg_id = tmp->msg_id;
+            printf("the id number of message is:%d\n", *p_msg_id);
+            if(tmp->ACK == 1)
+            {
             //now we need to delete this message from the message list
-            if(prev!=NULL)
-                prev->pNext = tmp->pNext;
+                if(prev!=NULL)
+                    prev->pNext = tmp->pNext;
+                else
+                    pHeadMsg = tmp->pNext;
+                free(tmp);
+                return 2;//send only the ACK
+            }
             else
-                pHeadMsg = tmp->pNext;
-            free(tmp);
-            return 1;
+            {
+                tmp->ACK = 1;
+                return 1;//send the message 
+            }
         }
         prev = tmp;
         tmp = tmp->pNext;
