@@ -14,14 +14,14 @@
 #define TRUE 1
 #define FALSE 0
 int busy;
-int kill;
+int server_port;
 pthread_t thread;
 pthread_attr_t attr;
 pthread_mutex_t mutex1;
 pthread_cond_t signal1;
 
 
-
+//Mesaage storing linked list
 struct messages{
     char msg[256];
     char from[254];
@@ -31,7 +31,7 @@ struct messages{
 };
 
 
-
+//Registered users
 struct registered{
     char id[254];
     unsigned int msg_id;
@@ -39,6 +39,7 @@ struct registered{
     struct registered* pNext;
 };
 
+//Connected users
 struct connected{
     char id[254];
     int port;
@@ -51,57 +52,49 @@ struct connected* pHeadCon = NULL;
 struct messages* pHeadMsg = NULL;
 
 //FUNCTION DECLARATIONS
-int searchConIpPort(char* p_id, char * p_ip, int p_port);
-unsigned int getMsgId(char* id);
-int addReg(char* id, int port);
-int addMsg(char* p_msg, char* p_from, char* p_to, unsigned int p_msg_id);
-int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
-int searchReg(char* id);
-int deleteReg(char* id);
-int numReg(void);
-int addCon(char* id,int port,char* ip);
-int searchCon(char* id);
-int getConIpPort(char* p_id, char* p_ip, char * p_port);
-int deleteCon(char* id);
-int numCon(void);
+int searchConIpPort(char* p_id, char * p_ip, int p_port); //Serach for user based on its IP and port
+unsigned int getMsgId(char* id); //Get msg id
+int addReg(char* id, int port); //Add registered user
+int addMsg(char* p_msg, char* p_from, char* p_to, unsigned int p_msg_id); //Add message  to list
+int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to); //search for message by username
+int searchReg(char* id); //search for registred user
+int deleteReg(char* id); //delete registred user
+int numReg(void); //number of registred users
+int addCon(char* id,int port,char* ip); //Add connected user
+int searchCon(char* id); //Search connected user
+int getConIpPort(char* p_id, char* p_ip, char * p_port); //Get ip and  port of a connected user
+int deleteCon(char* id); //delete connected user
+int numCon(void); //Number of connected users
+//Functions used for UN/register, DIS/connect and send_mess
 int register_user(char* user, int sc);
 int unregister_user(char* user, int sc);
 int connect_user(char* user, int port, int sc,char* ip);
 int disconnect_user(char* user, int sc);
 int send_req_user(char* user, char* message,char* port, int sc);
-int send_mess_ack_user();
-int send_mess_to_user();
 
 //FUNCTIONS
 //REGISTER
 int register_user(char* user, int sc){
     char buffer[MAX_LINE];
     int msg;
-    printf("In register_user()!\n");
     int res = searchReg(user);
     if (res==1){
-        printf("user already exists\n");
         strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"USERNAME IN USE");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> REGISTER %s FAIL\n",user);
         return  1;
     }
     if (res==0){
-        addReg(user, 4200);
-        printf("user registered\n");
-        printf("number of  registered users is %i\n",numReg());
+        addReg(user, server_port);
         strcpy(buffer,"0");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"REGISTER OK");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> REGISTER %s OK\n",user);
         return 0;
     }
     else{
         strcpy(buffer,"2");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"REGISTER FAIL");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> REGISTER %s FAIL\n",user);
         return 2;
     }
 }
@@ -110,42 +103,37 @@ int register_user(char* user, int sc){
 int unregister_user(char* user, int sc){
     char buffer[MAX_LINE];
     int msg;
-    printf("In unregister_user()!\n");
     int res = searchReg(user);
+    //User not registered
     if (res==0){
         strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        printf("user does not exists\n");
-        //strcpy(buffer,"USER DOES NOT EXIST");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> UNREGISTER %s FAIL\n",user);
         return 1;
     }
+    //User registered
     if (res==1){
         res = searchCon(user);
+        //User connected / needs to disconnect first
         if (res==1){
             strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            printf("user needs to disconnect first\n");
-            //strcpy(buffer,"UNREGISTER FAIL");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> UNREGISTER %s FAIL\n",user);
             return 2;
         }
+        //User not connected all good!
         else{
             deleteReg(user);
-            printf("user unregistered\n");
-            printf("number of  registered users is %i\n",numReg());
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"UNREGISTER OK");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> UNREGISTER %s OK\n",user);
             return 0;
         }
     }
     else{
         strcpy(buffer,"2");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"UNREGISTER FAIL");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> UNREGISTER %s FAIL\n",user);
         return 2;
     }
 }
@@ -154,43 +142,38 @@ int unregister_user(char* user, int sc){
 int connect_user(char* user, int port, int sc,char* ip){
     char buffer[MAX_LINE];
     int msg;
-    printf("In connect_user()!\n");
-    printf("User's ip is:%s\n",ip);
     int res = searchReg(user);
+    //User not registered
     if (res==0){
-        printf("user not registered\n");
         strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"CONNECT FAIL, USER DOES NOT EXIST");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> CONNECT %s FAIL\n",user);
         return  1;
     }
+    //User registered
     else{
         int res = searchCon(user);
+        //User connected
         if (res==1){
-            printf("user already connected\n");
             strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"USER ALREADY CONNECTED");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> CONNECT %s FAIL\n",user);
             return  2;
         }
+        //User not connected
         if (res==0){
             addCon(user,port,ip);
-            printf("user connected\n");
-            printf("number of  connected users is %i\n",numCon());
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"CONNECT OK");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> CONNECT %s OK\n",user);
             return 0;
         }
+        //Weird stuff happenin (should never get here hopefuly)
         else{
             strcpy(buffer,"3");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"CONNECT FAIL");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
-            return 2;
+            printf("s> CONNECT %s FAIL\n",user);
+            return 3;
         }
     }
 }
@@ -199,48 +182,45 @@ int connect_user(char* user, int port, int sc,char* ip){
 int disconnect_user(char* user, int sc){
     char buffer[MAX_LINE];
     int msg;
-    printf("In disconnect_user()!\n");
     int res = searchReg(user);
+    //User not registered
     if (res==0){
-        printf("user not registered\n");
         strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"DISCONNECT FAIL/ USER DOES NOT EXIST");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> DISCONNECT %s FAIL\n",user);
         return  1;
     }
+    //User registered
     else if (res==1){
         int res = searchCon(user);
+        //User connected
         if (res==1){
             deleteCon(user);
-            printf("user disconnecting\n");
-            printf("number of  connected users is %i\n",numCon());
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"DISCONNECT OK");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> DISCONNECT %s OK\n",user);
             return  0;
         }
+        //User not connected
         else{
-            printf("user not connected\n");
             strcpy(buffer,"2");
             msg=sendMessage(sc, buffer, strlen(buffer));
-            //strcpy(buffer,"DISCONNECT FAIL/ USER NOT CONNECTED");
-            //msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> DISCONNECT %s FAIL\n",user);
             return 2;
         }
     }
+    //Weird stuff happenin (should never get here hopefuly)
     else{
         strcpy(buffer,"3");
         msg=sendMessage(sc, buffer, strlen(buffer));
-        //strcpy(buffer,"DISCONNECT FAIL");
-        //msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> DISCONNECT %s FAIL\n",user);
         return 3;
     }
 }
 
 //SEND_REQ
-int send_req_user(char* user, char* message,char* port, int sc){ //user = reciever , message = message to be sent, port = port of the connected user in order to search for his username in combination with IP adress in  case there are two users on the same computer
+int send_req_user(char* user, char* message,char* port, int sc){
+    //user = reciever , message = message to be sent, port = port of the connected user in order to search for his username in combination with IP adress in  case there are two users on the same computer
     char buffer[MAX_LINE];
     int msg;
     char sender[254];
@@ -249,33 +229,40 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
     int user_port_number;
     int port_number=atoi(port);
     
-    printf("MESSAGE SENT IS: %s\n",message);
     
     struct sockaddr_in client_server_addr;
     socklen_t serv_len = sizeof(client_server_addr);
     getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
+    //distinguish if I am sending to connected or registered only
     
-    printf("function returns %i\n",searchConIpPort((char*)sender,inet_ntoa(client_server_addr.sin_addr),port_number));
+    int res = searchConIpPort((char*)sender,inet_ntoa(client_server_addr.sin_addr),port_number);
     
-    printf("NAME OF THE SENDER IS:%s\n",sender);
+    if (res==0){
+        //printf("CONNECTED user not found\n");
+        strcpy(buffer,"2");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        getConIpPort(user,user_ip,user_port);
+        user_port_number=atoi(user_port);
+        printf("s> SEND FAIL\n");
+        return 2;
+    }
     
-    int res = searchReg(user);
-    //printf("AM I HERE? %i \n",res);
+    res = searchReg(user);
     if (res==1){
-        printf("USER REGISTERED\n");
         res = searchCon(user);
+        //User connected
         if (res==1){
-            printf("USER CONNECTED\n");
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
             getConIpPort(user,user_ip,user_port);
             user_port_number=atoi(user_port);
-            //Connection to the socket
+            
+            //Connection to the socket of reciever
             int sock = 0, valread;
             if ((sock = socket(AF_INET,SOCK_STREAM, 0)) < 0)
             {
                 printf("\n Socket creation error \n");
-                //return -1;
+                return -1;
             }
             client_server_addr.sin_family = AF_INET;
             client_server_addr.sin_port = htons(user_port_number); //port number of reciever
@@ -283,18 +270,18 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
             if(inet_pton(AF_INET, user_ip , &client_server_addr.sin_addr)<=0) //IP of  reciever
             {
                 printf("\nInvalid address/ Address not supported \n");
-                //return -1;
+                return -1;
             }
             if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
             {
                 printf("\nConnection Failed \n");
-                //return -1;
+                return -1;
             }
-            //printf("I am sending to IP: %s PORT: %s\n",user_ip,user_port);
             unsigned int tmp_id = getMsgId(sender);
             addMsg(message,sender,user, tmp_id);
             unsigned int id;
             int i = searchMsg(sender,&id, message, user);
+            printf("s> SEND MESSAGE %d FROM %s TO %s\n",id,sender,user);
             char str[254];
             sprintf(str, "%d ", id);
             msg=sendMessage(sock, str, strlen(str));
@@ -303,7 +290,6 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
             strcat(message, "\n");
             msg=sendMessage(sock, message, strlen(message));
             close(sock);
-            printf("message was sent\n");
 
             //OPEN CONNECTION FOR SENDER TO SEND ACK
             getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
@@ -336,35 +322,33 @@ int send_req_user(char* user, char* message,char* port, int sc){ //user = reciev
             msg=sendMessage(sock, "ACK ", 5);
             msg=sendMessage(sock, "\n", 2);//4/5?
             close(sock);//close connection with the sender
-            printf("ACK was sent\n");
 
             return 0;
         }
+        //User registered
         else{
-            printf("USER NOT CONNECTED\n");
             unsigned int tmp_id = getMsgId(sender);
             addMsg(message,sender,user, tmp_id);
             strcpy(buffer,"0");
             msg=sendMessage(sc, buffer, strlen(buffer));
+            printf("s> SEND MESSAGE %d FROM %s TO %s STORED\n",tmp_id,sender,user);
             return 0;
         }
     }
+    //User not registered
     else if (res==0){
-        printf("USER DOES NOT EXIST\n");
         strcpy(buffer,"1");
         msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> SEND FAIL\n");
         return 1;
     }
-    return 0;
-}
-
-//SEND_MESS_ACK
-int send_mess_ack_user(){
-    return 0;
-}
-
-//SEND_MESS
-int send_mess_to_user(){
+    //Weird stuff happenin (should never get here hopefuly)
+    else{
+        strcpy(buffer,"2");
+        msg=sendMessage(sc, buffer, strlen(buffer));
+        printf("s> SEND FAIL\n");
+        return 2;
+    }
     return 0;
 }
 
@@ -372,11 +356,9 @@ int send_mess_to_user(){
 void manage_request (int *s) {
     int sc,client_sc;
     int  res;
-    kill=FALSE;
     pthread_mutex_lock(&mutex1);
     char buffer[MAX_LINE];
     int n;
-    printf("thread connected as well GJ\n");
     sc=*s;
     busy=FALSE;
     pthread_cond_signal(&signal1);
@@ -384,18 +366,21 @@ void manage_request (int *s) {
     
     while(1){
         int msg = readLine(sc, buffer, MAX_LINE);
+        //Register
         if(strncmp(buffer,"REGISTER",8)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res = register_user(buffer,sc);
             close(sc);
             break;
         }
+        //Unregister
         else if(strncmp(buffer,"UNREGISTER",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res = unregister_user(buffer,sc);
             close(sc);
             break;
         }
+        //Connect + send pending messages and ACKs
         else if(strncmp(buffer,"CONNECT",7)==0){
             char user_name[254];;
             msg = readLine(sc, buffer, MAX_LINE);
@@ -403,15 +388,12 @@ void manage_request (int *s) {
             char buffer2[MAX_LINE];
             msg = readLine(sc, buffer2, MAX_LINE);
             int port = atoi(buffer2);
-            //use getpeername to extract the  ip from the socket and then connect with the particular user
+            //use getpeername to extract the ip from the socket and then connect with the particular user
             struct sockaddr_in client_server_addr;
             socklen_t serv_len = sizeof(client_server_addr);
             getpeername(sc,(struct sockaddr *)&client_server_addr,&serv_len);
-            printf("Server socket's peer ip : %s\n", inet_ntoa(client_server_addr.sin_addr));
             res=connect_user(buffer,port,sc,inet_ntoa(client_server_addr.sin_addr));
             close(sc);
-            printf("The port number is:%d\n", port);
-            printf("The username is:%s\n",user_name);
             int sock = 0, valread;
             if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
             {
@@ -432,6 +414,7 @@ void manage_request (int *s) {
             unsigned int id;
             i = searchMsg(from_user,&id, message, user_name);
             
+            
             if (i>0){
                 if (connect(sock, (struct sockaddr *)&client_server_addr, sizeof(client_server_addr)) < 0)
                 {
@@ -440,18 +423,15 @@ void manage_request (int *s) {
                 }
                 while(1)//loop to search for all the messages for the connected user
                 {
-                    //printf("im in the while(1) loop that i will be sending the messages back\n");
-                    printf("did we find any messages?\n return from function:%d\nmessage:%s\nfrom_user:%s\n",i,message,from_user);
-                    printf("the number of the id of this message in while(1 )loop is %d\n", id);
                     if(i == 0)
                     {
                         close(sock);
                         break;
                     }
-                    printf("FROM_USER IS WTF!!!!!: %s\n",from_user);
+                    //Message is not an ACK (send message  -> send ack)
                     if(strcmp(from_user,"ACK")!=0)
                     {
-                        printf("NOT AN ACK\n");
+                        printf("s> SEND MESSAGE %d FROM %s TO %s\n",id,from_user,user_name);
                         char str[254];
                         sprintf(str, "%d ", id);
                         msg=sendMessage(sock, str, strlen(str));
@@ -461,23 +441,18 @@ void manage_request (int *s) {
                         msg=sendMessage(sock, from_user, strlen(from_user));
                         strcat(message, "\n");
                         msg=sendMessage(sock, message, strlen(message));
-                        printf("FROM_USER IS!!!!!: %sh\n",reciever);
                         res = searchCon(reciever);
-                        printf("FROM USER IS CONNECTED? %i\n",res);
                         if (res==1){
-                            printf("SENDER IS CONNECTED SENDING MESSAGE TO RECIEVER\n");
                             struct sockaddr_in sclient_server_addr;
                             socklen_t sserv_len = sizeof(sclient_server_addr);
-                            printf("username is old: %sh\n",from_user);
                             char user_ip[254];
                             char user_port[254];
                             int user_port_number;
                             getConIpPort(reciever,user_ip,user_port);
-                            printf("port for connection is: %s ip for connection is: %s\n",user_port,user_ip);
                             int soc=0;
                             user_port_number=atoi(user_port);
-                            printf("user port number is %i\n",user_port_number);
-                            //Connection to the socket
+                            
+                            //Connection to the socket of sender in order to send an ACK if he connected
                             if ((soc = socket(AF_INET,SOCK_STREAM, 0)) < 0)
                             {
                                 printf("\n Socket creation error \n");
@@ -503,9 +478,10 @@ void manage_request (int *s) {
                             close(soc);
                         }
                         else{
-                            addMsg(" ", "ACK", from_user, id);
+                            addMsg(" ", "ACK", reciever, id);
                         }
                     }
+                    //Message is an ACK (send ack only)
                     else{
                         char str[254];
                         sprintf(str, "%d ", id);
@@ -516,12 +492,12 @@ void manage_request (int *s) {
                         msg=sendMessage(sock, message, strlen(message));
                     }
                     i = searchMsg(from_user,&id, message, user_name);
-                    //int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to);
                 }
 
             }
             break;
         }
+        //Disconnect
         else if(strncmp(buffer,"DISCONNECT",10)==0){
             msg = readLine(sc, buffer, MAX_LINE);
             res=disconnect_user(buffer,sc);
@@ -531,21 +507,13 @@ void manage_request (int *s) {
             close(sc);
             break;
         }
+        //Send message to someone
         else if(strncmp(buffer,"SEND",4)==0){
             char buffer2[MAX_LINE],port[MAX_LINE];
             msg = readLine(sc, buffer, MAX_LINE);
-            printf("The reciver is:%s\n", buffer);
             msg = readLine(sc, buffer2, MAX_LINE);
-            printf("The message is:%s\n", buffer2);
             msg = readLine(sc, port, MAX_LINE);
-            printf("The port is:%s\n", port);
             res=send_req_user(buffer,buffer2,port,sc);
-            close(sc);
-            printf("CONNECTION CLOSED\n");
-            break;
-        }
-        else if(strncmp(buffer,"SEND_MESS_ACK",13)==0){
-            res=send_mess_ack_user();
             close(sc);
             break;
         }
@@ -553,13 +521,23 @@ void manage_request (int *s) {
             break;
         }
     }
-    printf("THREAD EXITED\n");
     pthread_exit(NULL);
 }
 
 //MAIN
 int main(int argc, char *argv[])
 {
+        //Port number as an argument
+        if (argc > 3 || argc < 3 || strcmp(argv[1],"-p")!=0)
+        {
+            printf("s> enter 1 argument only in  a form: eg.\"./server -p <port_number>\"\n");
+            return -1;
+        }
+    
+        server_port = atoi(argv[2]);
+    
+        printf("s> init server (localhost) 127.0.0.1 : %i\ns>\n",server_port); //GET LOCAL IP SOMEHOW!
+    
         //Variables declarations
         pthread_attr_init(&attr);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -587,7 +565,7 @@ int main(int argc, char *argv[])
         bzero((char *)&server_addr, sizeof(server_addr));
         server_addr.sin_addr.s_addr = INADDR_ANY;
         server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(4200);
+        server_addr.sin_port = htons(server_port);
         connection = bind(sd,(const struct sockaddr *) &server_addr,sizeof(server_addr));
         if (connection < 0){
             perror("Error in connecting");
@@ -600,12 +578,8 @@ int main(int argc, char *argv[])
         }
         //While for accepting connections
         while(1){
-            printf("waiting  for connection\n");
             int sc = accept(sd,(struct sockaddr *)&client_addr,&size);
-            //printf("what is in sc %d\n", sc);
-            //char *ip = inet_ntoa(client_addr.sin_addr);
-            //printf("let me see the ip address in main:%s\n", ip);
-            pthread_create(&thread,&attr,manage_request,&sc); //HERE!!!!!
+            pthread_create(&thread,&attr,(void * _Nullable) manage_request,&sc);
             pthread_mutex_lock(&mutex1);
             while(busy==TRUE){
                 pthread_cond_wait(&signal1,&mutex1);
@@ -614,12 +588,6 @@ int main(int argc, char *argv[])
             busy=TRUE;
             if (sc < 0){
                 perror("NOT CONNECTED");
-                exit(1);
-            }
-            else{
-                printf("connected\n");
-            }
-            if (kill==TRUE){
                 exit(1);
             }
         }
@@ -705,7 +673,6 @@ int addCon(char* id, int port,char* ip)
     strcpy(new->id,id);
     new->port = port;
     strcpy(new->ip,ip);
-    printf("port number for user: %s is %i\n",new->id,new->port);
     new->pNext = pHeadCon;
     pHeadCon = new;
     return 0;
@@ -780,7 +747,6 @@ int addMsg(char* p_msg, char* p_from, char* p_to,unsigned int p_msg_id)
     strcpy(new->from,p_from);
     strcpy(new->to,p_to);
     new->msg_id = p_msg_id;
-    printf("the last message addes for user: %s has ID:%d\n", new->from, new->msg_id);
     new->pNext = pHeadMsg;
     pHeadMsg = new;
     return 0;
@@ -802,7 +768,7 @@ int searchMsg(char *p_from,unsigned int * p_msg_id, char* p_msg, char* p_to)//se
             else
                 pHeadMsg = tmp->pNext;
             free(tmp);
-            return 1;//send only the ACK
+            return 1; //element exists!
         }
         prev = tmp;
         tmp = tmp->pNext;

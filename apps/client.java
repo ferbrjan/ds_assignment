@@ -65,16 +65,22 @@ class client {
                         if(!messages[s].isEmpty())
                         {
                             StringBuffer message = new StringBuffer();
-                            for(int i = 2; i < info.length; i++)
-                            {
-                                message.append(info[i] + " ");
+                            if  ("ACK".equals(info[1].trim())){
+                                System.out.println("SEND MESSAGE " + info[0] + " OK");
+                                System.out.flush();
                             }
-                            String final_msg = message.toString();
-                            System.out.println("MESSAGE " + info[0] + " FROM " +  info[1] + ":\n" +  final_msg + "\nEND");
-                            System.out.flush();
+                            else{
+                                for(int i = 2; i < info.length; i++)
+                                {
+                                    message.append(info[i] + " ");
+                                }
+                                String final_msg = message.toString();
+                                System.out.println("MESSAGE " + info[0] + " FROM " +  info[1] + ":\n" +  final_msg + "\nEND");
+                                System.out.flush();
+                            }
                         }
                     }
-                    System.out.println("c>");                    
+                    System.out.print("c> ");                    
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -109,14 +115,17 @@ class client {
             
             if ("0".equals(s.trim())){
                 System.out.println("c> REGISTER OK");
+                System.out.flush();
                 return RC.OK; //CHANGE!
             }
             else if ("1".equals(s.trim())){
                 System.out.println("c> USERNAME IN USE");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
                 System.out.println("c> REGISTER FAIL");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR;
@@ -164,14 +173,17 @@ class client {
             
             if ("0".equals(s.trim())){
                 System.out.println("c> UNREGISTER OK");
+                System.out.flush();
                 return RC.OK; //CHANGE!
             }
             else if ("1".equals(s.trim())){
                 System.out.println("c> USER DOES NOT EXIST");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
                 System.out.println("c> UNREGISTER FAIL");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR;
@@ -245,14 +257,17 @@ class client {
             }
             else if ("1".equals(s.trim())){
                 System.out.println("c> CONNECT FAIL , USER DOES NOT EXIST");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             else if ("2".equals(s.trim())){
                 System.out.println("c> USER ALREADY CONNECTED");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             else if ("3".equals(s.trim())){
                 System.out.println("c> CONNECT FAIL");
+                System.out.flush();
                 return RC.ERROR; //CHANGE!
             }
             return RC.ERROR; //CHANGE!
@@ -301,19 +316,23 @@ class client {
             
             if ("0".equals(s.trim())){
                 System.out.println("c> DISCONNECT OK");
+                System.out.flush();
                 _readMessage.stop();
                 return RC.OK;
             }
             else if ("1".equals(s.trim())){
                 System.out.println("c> DISCONNECT FAIL / USER DOES NOT EXIST");
+                System.out.flush();
                 return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
                 System.out.println("c> DISCONNECT FAIL / USER NOT CONNECTED");
+                System.out.flush();
                 return RC.ERROR;
             }
             else if ("3".equals(s.trim())){
                 System.out.println("c> DISCONNECT FAIL");
+                System.out.flush();
                 return RC.ERROR;
             }
             return RC.ERROR;
@@ -370,15 +389,18 @@ class client {
                 in.read(aux);
                 s = new String(aux);
                 System.out.println("c> SEND OK");
+                System.out.flush();
                 sc.close();
                 return RC.OK;
             }
             else if ("1".equals(s.trim())){
                 System.out.println("c> SEND FAIL / USER DOES NOT EXIST");
+                System.out.flush();
                 return RC.ERROR;
             }
             else if ("2".equals(s.trim())){
                 System.out.println("c> SEND FAIL");
+                System.out.flush();
                 return RC.ERROR;
             }
             return RC.ERROR;
