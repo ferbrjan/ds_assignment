@@ -59,7 +59,7 @@ class client {
                     stream.read(mess);
                     String msg= new String(mess);
                     String[] messages = msg.split("\n");
-                    for(int s =0; s<messages.length - 1; s++)
+                    for(int s = messages.length - 2; s>=0; s--)
                     {
                         String[] info = messages[s].split(" ");
                         if(!messages[s].isEmpty())
